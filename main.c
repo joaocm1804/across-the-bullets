@@ -1,8 +1,13 @@
 #include "raylib.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
 
 #include <math.h>
+
+#define MAX_BULLET  2
+
 
 typedef struct Inventario{
     int pedra;
@@ -21,18 +26,18 @@ typedef struct Player{
 
 
 typedef struct Bullet{
-    float speed;
+    int speed;
     Vector2 position;
     Vector2 direction;
     //int damage;
-    //bool ativo;
+    bool ativo;
     struct Bullet * next;
 } Bullet;
 
 //Inicializa texturas
 static Texture2D background;
 static Texture2D personagem;
-static Texture2D bullet;
+static Texture2D bulletTex;
 
 // Variaveis Globais:
 static const int screenWidth = 1280;
@@ -44,8 +49,10 @@ static bool gameOver = false;
 static bool pause = false;
 static bool victory = false;
 
+
 static Player player = { 0 };
-//static Bullet bullet[tamanho] = { 0 }; //ajustar
+static Bullet bullet[MAX_BULLET] = { 0 }; //ajustar
+
 
 static float tempo_decorrido = 0;
 
@@ -80,11 +87,20 @@ int main(void)
 }
 
 void InitGame(void){
+    srand(time(NULL));
+
+    int x_pos, y_pos;
+    //Inicializa variaveis bullet
+    for (int i = 0; i <MAX_BULLET; i++){
+        bullet[i].speed = 8;
+    }
+
+
 
     //Carregar os sprites as suas respectivas funções
     background = LoadTexture("assets/background.png");
     personagem = LoadTexture("assets/Unarmed_Idle_full.png");
-    bullet = LoadTexture("assets/bullet.png");
+    bulletTex = LoadTexture("assets/bullet.png");
 
     //inicializa as variáveis do player
     player.position = (Vector2){screenWidth - player.width, screenHeight - player.width};
@@ -94,6 +110,16 @@ void InitGame(void){
     player.speed = 7;
     player.backpack.madeira = 0;
     player.backpack.pedra = 0;
+
+    for (int i = 0; i <MAX_BULLET; i++){
+        x_pos = GetRandomValue(0, screenWidth);
+
+        y_pos = GetRandomValue(0, screenHeight);
+
+        bullet[i].position = (Vector2){x_pos, y_pos};
+        bullet[i].ativo = true;
+
+    }
     
 }
 
@@ -115,6 +141,14 @@ void DrawGame(void){
     //Desenhar boneco
     DrawRectangle(player.position.x, player.position.y, player.width, player.height, RED);
 
+    for (int i = 0; i < MAX_BULLET; i++)
+    {
+        if (bullet[i].ativo == true){
+            DrawRectangle(bullet[i].position.x, bullet[i].position.y, 40, 40, ORANGE);
+        }
+    }
+    
+
 
 
     EndDrawing();
@@ -125,15 +159,19 @@ void UpdateGame(void){
     float deltaTime = GetFrameTime();
     tempo_decorrido += deltaTime; 
 
+    
 
     //  movimentacao do jogador inclusive na diagonal
     if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)){
         player.position.x -= player.speed;
-    } if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)){
+    }
+    if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)){
         player.position.x += player.speed;
-    } if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)){
+    }
+    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)){
         player.position.y -= player.speed;
-    } if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)){
+    }
+    if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)){
         player.position.y += player.speed;
     }
 
@@ -150,6 +188,15 @@ void UpdateGame(void){
     if (player.position.y > screenHeight - player.height){
         player.position.y = screenHeight - player.height;
     }
+
+    for (int i = 0; i < MAX_BULLET; i++)
+    {
+        if (bullet[i].ativo){
+            bullet[i].position.x += bullet[i].speed;
+            bullet[i].position.y += bullet[i].speed;
+        }
+    }
+    
 
 
 }
