@@ -15,6 +15,8 @@ typedef struct Player{
     int vida;
     int speed;
     Inventario backpack;
+    int width;
+    int height;
 } Player;
 
 
@@ -85,7 +87,9 @@ void InitGame(void){
     bullet = LoadTexture("assets/bullet.png");
 
     //inicializa as variáveis do player
-    player.position = (Vector2){screenWidth - 40, screenHeight - 50};
+    player.position = (Vector2){screenWidth - player.width, screenHeight - player.width};
+    player.width = 40;
+    player.height = 40; 
     player.vida = 3;
     player.speed = 7;
     player.backpack.madeira = 0;
@@ -109,7 +113,7 @@ void DrawGame(void){
     int rectangleSize = 40;
 
     //Desenhar boneco
-    DrawRectangle(player.position.x, player.position.y, 40, 40, RED);
+    DrawRectangle(player.position.x, player.position.y, player.width, player.height, RED);
 
 
 
@@ -122,16 +126,32 @@ void UpdateGame(void){
     tempo_decorrido += deltaTime; 
 
 
-
+    //  movimentacao do jogador inclusive na diagonal
     if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)){
         player.position.x -= player.speed;
-    } else if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)){
+    } if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)){
         player.position.x += player.speed;
-    } else if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)){
+    } if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)){
         player.position.y -= player.speed;
-    } else if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)){
+    } if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)){
         player.position.y += player.speed;
     }
+
+    // limitando a movimentação a tela
+    if (player.position.x < 0){ // limitando a esquerda da tela
+        player.position.x = 0;
+    }
+    if (player.position.x > screenWidth - player.width){ // limite a direita da tela
+        player.position.x = screenWidth - player.width;
+    }
+    if (player.position.y < 0){ // limiite para cima
+        player.position.y = 0;
+    }
+    if (player.position.y > screenHeight - player.height){
+        player.position.y = screenHeight - player.height;
+    }
+
+
 }
 
 void UnloadGame(void){
