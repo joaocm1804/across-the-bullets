@@ -11,7 +11,6 @@ typedef struct Inventario{
 
 typedef struct Player{
     Vector2 position;
-    float speed;
     Texture2D texture;
     int vida;
     Inventario backpack;
@@ -33,6 +32,7 @@ static Texture2D personagem;
 // Variaveis Globais:
 static const int screenWidth = 1280;
 static const int screenHeight = 720;
+static int player_speed = 7;
 
 static bool gameOver = false;
 static bool pause = false;
@@ -61,6 +61,7 @@ int main(void)
 
     while (!WindowShouldClose())
     {
+        UpdateGame();
         DrawGame();
     }
 
@@ -77,6 +78,8 @@ void InitGame(void){
     //Carregar os sprites as suas respectivas funções
     background = LoadTexture("assets/background.png");
     personagem = LoadTexture("assets/Ruhtra.png");
+
+    player.position = (Vector2){screenWidth - 40, screenHeight - 50};
     
 }
 
@@ -93,7 +96,26 @@ void DrawGame(void){
         }
     }
 
+    int rectangleSize = 40;
+
+    //Desenhar boneco
+    DrawRectangle(player.position.x, player.position.y, 40, 40, RED);
+
+
+
     EndDrawing();
+}
+
+void UpdateGame(void){
+    if (IsKeyDown(KEY_A)){
+        player.position.x -= player_speed;
+    } else if (IsKeyDown(KEY_D)){
+        player.position.x += player_speed;
+    } else if (IsKeyDown(KEY_W)){
+        player.position.y -= player_speed;
+    } else if (IsKeyDown(KEY_S)){
+        player.position.y += player_speed;
+    }
 }
 
 void UnloadGame(void){
