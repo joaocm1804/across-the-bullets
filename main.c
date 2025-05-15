@@ -41,15 +41,15 @@ static const int screenWidth = 1280;
 static const int screenHeight = 720;
 
 
-static float tempo_jogado = 0.0;
-static float cronometro_last_spawn = 0.0;
-static float intervalo = 2.0f;
-static float intervalo_minimo = 0.3;
-static float qtd_diminuir_por_s = 0.07;
+static float tempo_jogado = 0.0f;
+static float cronometro_last_spawn = 0.0f;//quanto tempo passou desde a ultima bala disparada
+static float intervalo = 2.5f; //intervalo que as balas surgem
+static float intervalo_minimo = 0.3f; //não pode disparar mais rapido que isso
+static float qtd_diminuir_por_s = 0.1f;//rampa de dificulda (quanto maior, mais rapidamente fica dificil)
 
 //---Balas-------------------------------
 static float bullet_speed = 300.0f;
-static float bullet_increase = 25.0f;
+static float bullet_speed_increase = 10.0f; //incremento de velocidade
 static float bullet_size = 40;
 
 
@@ -235,7 +235,7 @@ void UpdateGame(void){
     if (cronometro_last_spawn >= intervalo){
         cronometro_last_spawn = 0.0f;
         if (intervalo > intervalo_minimo){
-            intervalo -= qtd_diminuir_por_s *deltaTime;
+            intervalo -= qtd_diminuir_por_s;
             if (intervalo < intervalo_minimo){
                 intervalo = intervalo_minimo;
             }
@@ -243,7 +243,7 @@ void UpdateGame(void){
 
         Bullet *new = (Bullet *)malloc(sizeof(Bullet));
         if (new != NULL){
-            new->speed = bullet_speed + bullet_increase * tempo_jogado;
+            new->speed = bullet_speed + bullet_speed_increase * tempo_jogado;
             int direcao = GetRandomValue(0, 3);
             if (direcao == 0){//norte
                 new->direction.x = 0;
