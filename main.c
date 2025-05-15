@@ -2,8 +2,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-
-
 #include <math.h>
 
 #define MAX_BULLET  2
@@ -26,11 +24,9 @@ typedef struct Player{
 
 
 typedef struct Bullet{
-    int speed;
+    float speed;
     Vector2 position;
     Vector2 direction;
-    //int damage;
-    bool ativo;
     struct Bullet * next;
 } Bullet;
 
@@ -40,10 +36,22 @@ static Texture2D personagem;
 static Texture2D bulletTex;
 
 // Variaveis Globais:
+//---Total-------------------------------
 static const int screenWidth = 1280;
 static const int screenHeight = 720;
 
-//
+
+static float tempo_jogado = 0.0;
+static float cronometro_last_spawn = 0.0;
+static float intervalo = 2.0f;
+static float intervalo_minimo = 0.3;
+static float qtd_diminuir_por_s = 0.07;
+
+//---Balas-------------------------------
+static float bullet_speed = 300.0f;
+static float bullet_increase = 25.0f;
+static float bullet_size = 40;
+
 
 static bool gameOver = false;
 static bool pause = false;
@@ -51,10 +59,9 @@ static bool victory = false;
 
 
 static Player player = { 0 };
-static Bullet bullet[MAX_BULLET] = { 0 }; //ajustar
+static struct Bullet *bullet = NULL;
 
 
-static float tempo_decorrido = 0;
 
 static void InitGame(void);         // Initialize game
 static void UpdateGame(void);       // Update game (one frame)
@@ -66,10 +73,7 @@ static void UnloadGame(void);       // Unload game
 int main(void)
 {
     InitWindow(screenWidth, screenHeight, "Across the Bullets");
-
-
     InitGame();
-
     SetTargetFPS(60);
 
     while (!WindowShouldClose())
@@ -79,7 +83,6 @@ int main(void)
     }
 
     UnloadGame();        
-
     CloseWindow(); 
 
 
@@ -88,12 +91,6 @@ int main(void)
 
 void InitGame(void){
     srand(time(NULL));
-
-    int x_pos, y_pos;
-    //Inicializa variaveis bullet
-    for (int i = 0; i <MAX_BULLET; i++){
-        bullet[i].speed = 8;
-    }
 
 
 
@@ -111,14 +108,33 @@ void InitGame(void){
     player.backpack.madeira = 0;
     player.backpack.pedra = 0;
 
-    for (int i = 0; i <MAX_BULLET; i++){
-        x_pos = GetRandomValue(0, screenWidth);
-
-        y_pos = GetRandomValue(0, screenHeight);
-
-        bullet[i].position = (Vector2){x_pos, y_pos};
-        bullet[i].ativo = true;
-
+    struct Bullet *b = (struct Bullet*)malloc(sizeof(Bullet));
+    if (b != NULL){
+        b->speed = bullet_speed;
+        int direction = GetRandomValue(0, 3);
+        if (direction == 0){//norte
+            b->direction.x = 0;
+            b->direction.y = 1;
+            b->position.y= -bullet_size; //nasce com o tamanho da bala para fora da tela
+            b->position.x = GetRandomValue(0, screenWidth - bullet_size);
+        } else if (direction == 1){//sul
+            b->direction.x = 0;
+            b->direction.y = -1;
+            b->position.y= screenHeight;
+            b->position.x = GetRandomValue(0, screenWidth - bullet_size);
+        } else if (direction == 2){//leste
+            b->direction.x = -1;
+            b->direction.y = 0;
+            b->position.x= screenWidth;
+            b->position.y = GetRandomValue(0, screenHeight - bullet_size);
+        } else if (direction == 3){//oeste
+            b->direction.x = 1;
+            b->direction.y = 0;
+            b->position.x= -bullet_size;
+            b->position.y = GetRandomValue(0, screenHeight - bullet_size);
+        }
+        b->next = bullet;
+        bullet = b;
     }
     
 }
@@ -141,11 +157,10 @@ void DrawGame(void){
     //Desenhar boneco
     DrawRectangle(player.position.x, player.position.y, player.width, player.height, RED);
 
-    for (int i = 0; i < MAX_BULLET; i++)
-    {
-        if (bullet[i].ativo == true){
-            DrawRectangle(bullet[i].position.x, bullet[i].position.y, 40, 40, ORANGE);
-        }
+    Bullet *b = bullet;
+    while (b !=NULL){
+        DrawRectangleV(b->position, (Vector2){bullet_size, bullet_size}, ORANGE);
+        b = b->next;
     }
     
 
@@ -157,7 +172,8 @@ void DrawGame(void){
 void UpdateGame(void){
     //inicialização do tempo para aumentar dificuldade
     float deltaTime = GetFrameTime();
-    tempo_decorrido += deltaTime; 
+    tempo_jogado += deltaTime;
+    cronometro_last_spawn += deltaTime; 
 
     
 
@@ -189,14 +205,72 @@ void UpdateGame(void){
         player.position.y = screenHeight - player.height;
     }
 
-    for (int i = 0; i < MAX_BULLET; i++)
-    {
-        if (bullet[i].ativo){
-            bullet[i].position.x += bullet[i].speed;
-            bullet[i].position.y += bullet[i].speed;
+    Bullet *bullet_atual = bullet; //ponteiro para a principal
+    Bullet *bullet_anterior = NULL; //ponteiro para a bala anterior
+
+    while (bullet_atual != NULL){
+        bullet_atual->position.x += bullet_atual->direction.x * bullet_atual->speed * deltaTime; //determina a movimentação x da bala
+        bullet_atual->position.y += bullet_atual->direction.y * bullet_atual->speed * deltaTime; // determina a movimentação y da bala
+        bool saiu = false;
+        if (bullet_atual->position.x < -bullet_size || bullet_atual->position.x >= screenWidth || bullet_atual->position.y < -bullet_size || bullet_atual->position.y >= screenHeight){
+            saiu = true;
+        }
+
+        if (saiu == true){
+            Bullet *bullet_morta = bullet_atual;
+            if (bullet_anterior == NULL){
+                bullet = bullet_atual->next;
+            } else{
+                bullet_anterior->next = bullet_atual->next;
+            }
+            bullet_atual = bullet_atual->next;
+            free(bullet_morta);
+        } else{
+            bullet_anterior = bullet_atual;
+            bullet_atual = bullet_atual->next;
+        }
+        
+    }
+
+    if (cronometro_last_spawn >= intervalo){
+        cronometro_last_spawn = 0.0f;
+        if (intervalo > intervalo_minimo){
+            intervalo -= qtd_diminuir_por_s *deltaTime;
+            if (intervalo < intervalo_minimo){
+                intervalo = intervalo_minimo;
+            }
+        }
+
+        Bullet *new = (Bullet *)malloc(sizeof(Bullet));
+        if (new != NULL){
+            new->speed = bullet_speed + bullet_increase * tempo_jogado;
+            int direcao = GetRandomValue(0, 3);
+            if (direcao == 0){//norte
+                new->direction.x = 0;
+                new->direction.y = 1;
+                new->position.y= -bullet_size; //nasce com o tamanho da bala para fora da tela
+                new->position.x = GetRandomValue(0, screenWidth - bullet_size);
+            } else if (direcao == 1){//sul
+                new->direction.x = 0;
+                new->direction.y = -1;
+                new->position.y= screenHeight;
+                new->position.x = GetRandomValue(0, screenWidth - bullet_size);
+            } else if (direcao == 2){//leste
+                new->direction.x = -1;
+                new->direction.y = 0;
+                new->position.x= screenWidth;
+                new->position.y = GetRandomValue(0, screenHeight - bullet_size);
+            } else if (direcao == 3){//oeste
+                new->direction.x = 1;
+                new->direction.y = 0;
+                new->position.x= -bullet_size;
+                new->position.y = GetRandomValue(0, screenHeight - bullet_size);
+            }
+            new->next = bullet;
+            bullet = new;
         }
     }
-    
+
 
 
 }
@@ -204,4 +278,11 @@ void UpdateGame(void){
 void UnloadGame(void){
     UnloadTexture(background);
     UnloadTexture(personagem);
+
+    Bullet *bala = bullet;
+    while (bala != NULL){
+        Bullet *next = bala->next;
+        free(bala);
+        bala = next;
+    }
 }
