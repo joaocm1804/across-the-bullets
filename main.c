@@ -20,6 +20,7 @@ typedef struct Player{
     Inventario backpack;
     int width;
     int height;
+    bool colisao;
 } Player;
 
 
@@ -72,6 +73,7 @@ static void UnloadGame(void);       // Unload game
 
 int main(void)
 {
+   
     InitWindow(screenWidth, screenHeight, "Across the Bullets");
     InitGame();
     SetTargetFPS(60);
@@ -100,13 +102,18 @@ void InitGame(void){
     bulletTex = LoadTexture("assets/bullet.png");
 
     //inicializa as variáveis do player
-    player.position = (Vector2){screenWidth - player.width, screenHeight - player.width};
+ 
     player.width = 40;
     player.height = 40; 
+    player.position = (Vector2){screenWidth - player.width, screenHeight - player.width};
     player.vida = 3;
     player.speed = 7;
     player.backpack.madeira = 0;
     player.backpack.pedra = 0;
+
+
+
+    
 
     struct Bullet *b = (struct Bullet*)malloc(sizeof(Bullet));
     if (b != NULL){
@@ -136,6 +143,7 @@ void InitGame(void){
         b->next = bullet;
         bullet = b;
     }
+
     
 }
 
@@ -171,106 +179,118 @@ void DrawGame(void){
 
 void UpdateGame(void){
     //inicialização do tempo para aumentar dificuldade
-    float deltaTime = GetFrameTime();
-    tempo_jogado += deltaTime;
-    cronometro_last_spawn += deltaTime; 
-
-    
-
-    //  movimentacao do jogador inclusive na diagonal
-    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)){
-        player.position.x -= player.speed;
-    }
-    if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)){
-        player.position.x += player.speed;
-    }
-    if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)){
-        player.position.y -= player.speed;
-    }
-    if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)){
-        player.position.y += player.speed;
-    }
-
-    // limitando a movimentação a tela
-    if (player.position.x < 0){ // limitando a esquerda da tela
-        player.position.x = 0;
-    }
-    if (player.position.x > screenWidth - player.width){ // limite a direita da tela
-        player.position.x = screenWidth - player.width;
-    }
-    if (player.position.y < 0){ // limiite para cima
-        player.position.y = 0;
-    }
-    if (player.position.y > screenHeight - player.height){
-        player.position.y = screenHeight - player.height;
-    }
-
-    Bullet *bullet_atual = bullet; //ponteiro para a principal
-    Bullet *bullet_anterior = NULL; //ponteiro para a bala anterior
-
-    while (bullet_atual != NULL){
-        bullet_atual->position.x += bullet_atual->direction.x * bullet_atual->speed * deltaTime; //determina a movimentação x da bala
-        bullet_atual->position.y += bullet_atual->direction.y * bullet_atual->speed * deltaTime; // determina a movimentação y da bala
-        bool saiu = false;
-        if (bullet_atual->position.x < -bullet_size || bullet_atual->position.x >= screenWidth || bullet_atual->position.y < -bullet_size || bullet_atual->position.y >= screenHeight){
-            saiu = true;
-        }
-
-        if (saiu == true){
-            Bullet *bullet_morta = bullet_atual;
-            if (bullet_anterior == NULL){
-                bullet = bullet_atual->next;
-            } else{
-                bullet_anterior->next = bullet_atual->next;
-            }
-            bullet_atual = bullet_atual->next;
-            free(bullet_morta);
-        } else{
-            bullet_anterior = bullet_atual;
-            bullet_atual = bullet_atual->next;
-        }
+    if (!gameOver){
+        float deltaTime = GetFrameTime();
+        tempo_jogado += deltaTime;
+        cronometro_last_spawn += deltaTime; 
         
-    }
+        
 
-    if (cronometro_last_spawn >= intervalo){
-        cronometro_last_spawn = 0.0f;
-        if (intervalo > intervalo_minimo){
-            intervalo -= qtd_diminuir_por_s;
-            if (intervalo < intervalo_minimo){
-                intervalo = intervalo_minimo;
+        //  movimentacao do jogador inclusive na diagonal
+        if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)){
+            player.position.x -= player.speed;
+        }
+        if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)){
+            player.position.x += player.speed;
+        }
+        if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)){
+            player.position.y -= player.speed;
+        }
+        if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)){
+            player.position.y += player.speed;
+        }
+
+        // limitando a movimentação a tela
+        if (player.position.x < 0){ // limitando a esquerda da tela
+            player.position.x = 0;
+        }
+        if (player.position.x > screenWidth - player.width){ // limite a direita da tela
+            player.position.x = screenWidth - player.width;
+        }
+        if (player.position.y < 0){ // limiite para cima
+            player.position.y = 0;
+        }
+        if (player.position.y > screenHeight - player.height){
+            player.position.y = screenHeight - player.height;
+        }
+
+        Bullet *bullet_atual = bullet; //ponteiro para a principal
+        Bullet *bullet_anterior = NULL; //ponteiro para a bala anterior
+        Rectangle playerRec = {player.position.x, player.position.y, player.width, player.height};
+
+        while (bullet_atual != NULL){
+            bullet_atual->position.x += bullet_atual->direction.x * bullet_atual->speed * deltaTime; //determina a movimentação x da bala
+            bullet_atual->position.y += bullet_atual->direction.y * bullet_atual->speed * deltaTime; // determina a movimentação y da bala
+
+            
+            Rectangle bulletRec = {bullet_atual->position.x , bullet_atual->position.y , bullet_size , bullet_size};
+            if (CheckCollisionRecs(playerRec , bulletRec)){
+                gameOver = true;
+            }
+
+            bool saiu = false;
+            if (bullet_atual->position.x < -bullet_size || bullet_atual->position.x >= screenWidth || bullet_atual->position.y < -bullet_size || bullet_atual->position.y >= screenHeight){
+                saiu = true;
+            }
+
+            if (saiu == true){
+                Bullet *bullet_morta = bullet_atual;
+                if (bullet_anterior == NULL){
+                    bullet = bullet_atual->next;
+                } else{
+                    bullet_anterior->next = bullet_atual->next;
+                }
+                bullet_atual = bullet_atual->next;
+                free(bullet_morta);
+            } else{
+                bullet_anterior = bullet_atual;
+                bullet_atual = bullet_atual->next;
+            }
+            
+        }
+
+        if (cronometro_last_spawn >= intervalo){
+            cronometro_last_spawn = 0.0f;
+            if (intervalo > intervalo_minimo){
+                intervalo -= qtd_diminuir_por_s;
+                if (intervalo < intervalo_minimo){
+                    intervalo = intervalo_minimo;
+                }
+            }
+
+            Bullet *new = (Bullet *)malloc(sizeof(Bullet));
+            if (new != NULL){
+                new->speed = bullet_speed + bullet_speed_increase * tempo_jogado;
+                int direcao = GetRandomValue(0, 3);
+                if (direcao == 0){//norte
+                    new->direction.x = 0;
+                    new->direction.y = 1;
+                    new->position.y= -bullet_size; //nasce com o tamanho da bala para fora da tela
+                    new->position.x = GetRandomValue(0, screenWidth - bullet_size);
+                } else if (direcao == 1){//sul
+                    new->direction.x = 0;
+                    new->direction.y = -1;
+                    new->position.y= screenHeight;
+                    new->position.x = GetRandomValue(0, screenWidth - bullet_size);
+                } else if (direcao == 2){//leste
+                    new->direction.x = -1;
+                    new->direction.y = 0;
+                    new->position.x= screenWidth;
+                    new->position.y = GetRandomValue(0, screenHeight - bullet_size);
+                } else if (direcao == 3){//oeste
+                    new->direction.x = 1;
+                    new->direction.y = 0;
+                    new->position.x= -bullet_size;
+                    new->position.y = GetRandomValue(0, screenHeight - bullet_size);
+                }
+                new->next = bullet;
+                bullet = new;
             }
         }
 
-        Bullet *new = (Bullet *)malloc(sizeof(Bullet));
-        if (new != NULL){
-            new->speed = bullet_speed + bullet_speed_increase * tempo_jogado;
-            int direcao = GetRandomValue(0, 3);
-            if (direcao == 0){//norte
-                new->direction.x = 0;
-                new->direction.y = 1;
-                new->position.y= -bullet_size; //nasce com o tamanho da bala para fora da tela
-                new->position.x = GetRandomValue(0, screenWidth - bullet_size);
-            } else if (direcao == 1){//sul
-                new->direction.x = 0;
-                new->direction.y = -1;
-                new->position.y= screenHeight;
-                new->position.x = GetRandomValue(0, screenWidth - bullet_size);
-            } else if (direcao == 2){//leste
-                new->direction.x = -1;
-                new->direction.y = 0;
-                new->position.x= screenWidth;
-                new->position.y = GetRandomValue(0, screenHeight - bullet_size);
-            } else if (direcao == 3){//oeste
-                new->direction.x = 1;
-                new->direction.y = 0;
-                new->position.x= -bullet_size;
-                new->position.y = GetRandomValue(0, screenHeight - bullet_size);
-            }
-            new->next = bullet;
-            bullet = new;
-        }
-    }
+    } return;
 
+   
 
 
 }
