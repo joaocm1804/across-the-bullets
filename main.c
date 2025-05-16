@@ -225,7 +225,19 @@ void UpdateGame(void){
             
             Rectangle bulletRec = {bullet_atual->position.x , bullet_atual->position.y , bullet_size , bullet_size};
             if (CheckCollisionRecs(playerRec , bulletRec)){
-                gameOver = true;
+                player.vida--;
+                Bullet *bullet_morta = bullet_atual;
+                if (bullet_anterior == NULL){
+                    bullet = bullet_atual->next;
+                } else{
+                    bullet_anterior->next = bullet_atual->next;
+                }
+                bullet_atual = bullet_atual->next;
+                free(bullet_morta);
+                if (player.vida <= 0){
+                    gameOver = true;
+                }
+                continue;
             }
 
             bool saiu = false;
@@ -305,4 +317,7 @@ void UnloadGame(void){
         free(bala);
         bala = next;
     }
+
+    
+
 }
