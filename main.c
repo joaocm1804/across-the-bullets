@@ -84,7 +84,7 @@ int main(void)
         DrawGame();
     }
 
-    UnloadGame();        
+    UnloadGame();  
     CloseWindow(); 
 
 
@@ -171,8 +171,14 @@ void DrawGame(void){
         b = b->next;
     }
     
-
-
+    if (gameOver) {
+    const char* texto = "GAME OVER";
+    int tamanho_tex = 60;
+    int textWidth_texto = MeasureText(texto, tamanho_tex);
+    int x = (screenWidth - textWidth_texto) / 2;
+    int y = screenHeight / 2 - tamanho_tex / 2;
+    DrawText(texto, x, y, tamanho_tex, RED);
+}
 
     EndDrawing();
 }
