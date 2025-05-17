@@ -4,8 +4,6 @@
 #include <time.h>
 #include <math.h>
 
-#define MAX_BULLET  2
-
 
 typedef struct Inventario{
     int pedra;
@@ -67,6 +65,9 @@ static Texture2D homescreen;
 static Player player = { 0 };
 static struct Bullet *bullet = NULL;
 
+static Music homescreen_music;
+static Music game_music;
+
 
 
 static void InitGame(void);         // Initialize game
@@ -80,6 +81,7 @@ int main(void)
 {
    
     InitWindow(screenWidth, screenHeight, "Across the Bullets");
+    InitAudioDevice();
     InitGame();
     SetTargetFPS(60);
 
@@ -88,7 +90,7 @@ int main(void)
         UpdateGame();
         DrawGame();
     }
-
+    CloseAudioDevice();
     UnloadGame();  
     CloseWindow(); 
 
@@ -105,7 +107,11 @@ void InitGame(void){
 
     game_start = false;
 
+    //carrega as musicas
+    homescreen_music = LoadMusicStream("assets/audio/music/acrosstheuniverse.mp3");
+    game_music = LoadMusicStream("assets/audio/music/paint_it_black.mp3");
 
+    PlayMusicStream(homescreen_music);
 
     //Carregar os sprites as suas respectivas funções
     background = LoadTexture("assets/background.png");
@@ -116,7 +122,7 @@ void InitGame(void){
  
     player.width = 40;
     player.height = 40; 
-    player.position = (Vector2){screenWidth - player.width, screenHeight - player.width};
+    player.position = (Vector2){(screenWidth/2) - player.width/2, (screenHeight/2) - player.height/2};
     player.vida = 3;
     player.speed = 7;
     player.backpack.madeira = 0;
@@ -223,13 +229,20 @@ void DrawGame(void){
 
 void UpdateGame(void){
 
+
+
     if (game_start ==false){
+        UpdateMusicStream(homescreen_music);
         if (IsKeyPressed(KEY_ENTER)){
             game_start= true;
+            StopMusicStream(homescreen_music);
+            PlayMusicStream(game_music);
+            SetMusicVolume(game_music, 0.2f);
         }
         return;
     }
 
+    UpdateMusicStream(game_music);
     //inicialização do tempo para aumentar dificuldade
     if (!gameOver){
         float deltaTime = GetFrameTime();
@@ -363,6 +376,8 @@ void UnloadGame(void){
     UnloadTexture(background);
     UnloadTexture(personagem);
     UnloadTexture(homescreen);
+    UnloadMusicStream(homescreen_music);
+    UnloadMusicStream(game_music);
 
     Bullet *bala = bullet;
     while (bala != NULL){
