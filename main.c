@@ -48,6 +48,9 @@ static float intervalo = 2.5f; //intervalo que as balas surgem
 static float intervalo_minimo = 0.3f; //não pode disparar mais rapido que isso
 static float qtd_diminuir_por_s = 0.1f;//rampa de dificulda (quanto maior, mais rapidamente fica dificil)
 
+// PISCAR 
+int frameCount = 0;
+
 //---Balas-------------------------------
 static float bullet_speed = 300.0f;
 static float bullet_speed_increase = 10.0f; //incremento de velocidade
@@ -119,8 +122,6 @@ void InitGame(void){
     player.backpack.madeira = 0;
     player.backpack.pedra = 0;
 
-
-
     
 
     struct Bullet *b = (struct Bullet*)malloc(sizeof(Bullet));
@@ -160,6 +161,31 @@ void DrawGame(void){
     if (game_start == false){
         ClearBackground(RAYWHITE);
         DrawTexture(homescreen, 0, 0 , WHITE);
+
+        // TEXTO PÁGINA INCIAL
+        const char* linha1 = "Pressione [ENTER]";
+        const char* linha2 = "para começar!";
+
+        int tamanho_tex = 30;
+
+        int textWidth1 = MeasureText(linha1, tamanho_tex);
+        int textWidth2 = MeasureText(linha2, tamanho_tex);
+
+        int x1 = (screenWidth - textWidth1) / 2;
+        int x2 = (screenWidth - textWidth2) / 2;
+        
+        int posicaoYbase = screenHeight - 300;
+        int espacamento = tamanho_tex + 5;
+
+        // PISCAR TEXTO
+        frameCount++;
+
+        if ((frameCount / 45) % 2 == 0){ // quanto menor for o dividendo => mais rápido o texto
+            DrawText(linha1, x1, posicaoYbase, tamanho_tex, BLACK);
+            DrawText(linha2, x2, posicaoYbase + espacamento, tamanho_tex, BLACK);
+        }
+
+
     } else{
 
         //Desenha o background
