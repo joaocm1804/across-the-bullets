@@ -57,6 +57,8 @@ static float bullet_size = 40;
 static bool gameOver = false;
 static bool pause = false;
 static bool victory = false;
+static bool game_start = false;
+static Texture2D homescreen;
 
 
 static Player player = { 0 };
@@ -93,6 +95,12 @@ int main(void)
 
 void InitGame(void){
     srand(time(NULL));
+    Image imgstart = LoadImage("assets/home_8bit.jpeg");
+    ImageResize(&imgstart, screenWidth, screenHeight);
+    homescreen = LoadTextureFromImage(imgstart);
+    UnloadImage(imgstart);
+
+    game_start = false;
 
 
 
@@ -149,41 +157,53 @@ void InitGame(void){
 
 void DrawGame(void){
     BeginDrawing();
-    ClearBackground(RAYWHITE);
+    if (game_start == false){
+        ClearBackground(RAYWHITE);
+        DrawTexture(homescreen, 0, 0 , WHITE);
+    } else{
 
-    //Desenha o background
-    int backgroundWidth = background.width;
-    int backgroundHeight = background.height;
-    for (int y = 0; y < screenHeight; y += backgroundHeight){
-        for (int x = 0; x < screenWidth; x += backgroundWidth){
-            DrawTexture(background, x, y, WHITE);
+        //Desenha o background
+        int backgroundWidth = background.width;
+        int backgroundHeight = background.height;
+        for (int y = 0; y < screenHeight; y += backgroundHeight){
+            for (int x = 0; x < screenWidth; x += backgroundWidth){
+                DrawTexture(background, x, y, WHITE);
+            }
+        }
+
+        int rectangleSize = 40;
+
+        //Desenhar boneco
+        DrawRectangle(player.position.x, player.position.y, player.width, player.height, RED);
+
+        Bullet *b = bullet;
+        while (b !=NULL){
+            DrawRectangleV(b->position, (Vector2){bullet_size, bullet_size}, ORANGE);
+            b = b->next;
+        }
+        
+        if (gameOver) {
+        const char* texto = "GAME OVER";
+        int tamanho_tex = 60;
+        int textWidth_texto = MeasureText(texto, tamanho_tex);
+        int x = (screenWidth - textWidth_texto) / 2;
+        int y = screenHeight / 2 - tamanho_tex / 2;
+        DrawText(texto, x, y, tamanho_tex, RED);
         }
     }
-
-    int rectangleSize = 40;
-
-    //Desenhar boneco
-    DrawRectangle(player.position.x, player.position.y, player.width, player.height, RED);
-
-    Bullet *b = bullet;
-    while (b !=NULL){
-        DrawRectangleV(b->position, (Vector2){bullet_size, bullet_size}, ORANGE);
-        b = b->next;
-    }
-    
-    if (gameOver) {
-    const char* texto = "GAME OVER";
-    int tamanho_tex = 60;
-    int textWidth_texto = MeasureText(texto, tamanho_tex);
-    int x = (screenWidth - textWidth_texto) / 2;
-    int y = screenHeight / 2 - tamanho_tex / 2;
-    DrawText(texto, x, y, tamanho_tex, RED);
-}
 
     EndDrawing();
 }
 
 void UpdateGame(void){
+
+    if (game_start ==false){
+        if (IsKeyPressed(KEY_ENTER)){
+            game_start= true;
+        }
+        return;
+    }
+
     //inicialização do tempo para aumentar dificuldade
     if (!gameOver){
         float deltaTime = GetFrameTime();
@@ -316,6 +336,7 @@ void UpdateGame(void){
 void UnloadGame(void){
     UnloadTexture(background);
     UnloadTexture(personagem);
+    UnloadTexture(homescreen);
 
     Bullet *bala = bullet;
     while (bala != NULL){
