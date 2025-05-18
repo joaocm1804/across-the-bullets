@@ -34,6 +34,7 @@ typedef struct Bullet{
 static Texture2D background;
 static Texture2D personagem;
 static Texture2D bulletTex;
+static Texture2D vida;
 
 // Variaveis Globais:
 //---Total-------------------------------
@@ -118,6 +119,7 @@ void InitGame(void){
     background = LoadTexture("assets/background.png");
     personagem = LoadTexture("assets/Unarmed_Idle_full.png");
     bulletTex = LoadTexture("assets/bullet.png");
+    vida = LoadTexture("assets/vida.png");
 
     //inicializa as variáveis do player
  
@@ -204,6 +206,8 @@ void DrawGame(void){
             }
         }
 
+
+        //Desenha a vida
         int rectangleSize = 40;
         int coracaoX = 10;
         int tamanho_coracao = 30;
@@ -216,6 +220,8 @@ void DrawGame(void){
 
         //Desenhar boneco
         DrawRectangle(player.position.x, player.position.y, player.width, player.height, RED);
+
+        //Desenha o tempo
         DrawText(TextFormat("%0.02f", (float)tempo_jogado/60), screenWidth - screenWidth/18 , 10, 30 , BLACK);
         
 
@@ -387,6 +393,7 @@ void UnloadGame(void){
     UnloadTexture(background);
     UnloadTexture(personagem);
     UnloadTexture(homescreen);
+    UnloadTexture(vida);
     UnloadMusicStream(homescreen_music);
     UnloadMusicStream(game_music);
 
