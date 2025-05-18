@@ -208,11 +208,10 @@ void DrawGame(void){
 
 
         //Desenha a vida
-        int rectangleSize = 40;
         int coracaoX = 10;
         int tamanho_coracao = 30;
         for (int i = 1 ; i <= player.vida; i++){
-            DrawRectangle(coracaoX , 10 , 30 , 30 , RED);
+            DrawTexture(vida, coracaoX, 10, WHITE);
             coracaoX += tamanho_coracao + 10;
         }
 
@@ -222,7 +221,11 @@ void DrawGame(void){
         DrawRectangle(player.position.x, player.position.y, player.width, player.height, RED);
 
         //Desenha o tempo
-        DrawText(TextFormat("%0.02f", (float)tempo_jogado/60), screenWidth - screenWidth/18 , 10, 30 , BLACK);
+        int minutos = (int)tempo_jogado / 60;
+        int segundos = (int)tempo_jogado % 60;
+        DrawText(TextFormat("%02d:%02d", minutos, segundos), screenWidth - screenWidth/10 , 10, 30 , BLACK);
+
+        // DrawText(TextFormat("%0.02f", (float)tempo_jogado/60), screenWidth - screenWidth/18 , 10, 30 , BLACK);
         
 
         Bullet *b = bullet;
