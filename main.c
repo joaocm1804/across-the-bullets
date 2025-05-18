@@ -18,6 +18,7 @@ typedef struct Player{
     Inventario backpack;
     int width;
     int height;
+    float resultado_tempo;
     bool colisao;
 } Player;
 
@@ -204,9 +205,19 @@ void DrawGame(void){
         }
 
         int rectangleSize = 40;
+        int coracaoX = 10;
+        int tamanho_coracao = 30;
+        for (int i = 1 ; i <= player.vida; i++){
+            DrawRectangle(coracaoX , 10 , 30 , 30 , RED);
+            coracaoX += tamanho_coracao + 10;
+        }
+
+
 
         //Desenhar boneco
         DrawRectangle(player.position.x, player.position.y, player.width, player.height, RED);
+        DrawText(TextFormat("%0.02f", (float)tempo_jogado/60), screenWidth - screenWidth/18 , 10, 30 , BLACK);
+        
 
         Bullet *b = bullet;
         while (b !=NULL){
