@@ -113,10 +113,11 @@ void salvarRanking(User **ranking);
 int main(void)
 {
    
-    InitWindow(screenWidth, screenHeight, "Across the Bullets");
-    InitAudioDevice();
-    InitGame();
-    SetTargetFPS(60);
+    InitWindow(screenWidth, screenHeight, "Across the Bullets");    // Inicializa a janela tema
+    InitAudioDevice();                                              // Inicializa o sistema de audios
+    InitGame();                                                     // Inicializa os elementos do jogo
+    SetTargetFPS(60);                                               // Definição de uma taxa mínima de FPS.
+
 
     while (!WindowShouldClose())
     {
@@ -220,11 +221,13 @@ void DrawGame(void){
         const char* linha1 = "Pressione [ENTER]";
         const char* linha2 = "para começar!";
 
-        int tamanho_tex = 30;
 
+        // DEFINICÃO DE CARACTERES DO TEXTO INICIAL
+        int tamanho_tex = 30;
         int textWidth1 = MeasureText(linha1, tamanho_tex);
         int textWidth2 = MeasureText(linha2, tamanho_tex);
 
+        //DEFINIÇÃO DAS POSIÇÕES NA TELA DO TEXTO INICIAL
         int x1 = (screenWidth - textWidth1) / 2;
         int x2 = (screenWidth - textWidth2) / 2;
         
@@ -242,7 +245,7 @@ void DrawGame(void){
     // GAME --------------------------------------------------------------------------------------------
     } else{
 
-        //Desenha o background
+        // DESENHA O BACKGROUND
         int backgroundWidth = background.width;
         int backgroundHeight = background.height;
         for (int y = 0; y < screenHeight; y += backgroundHeight){
@@ -251,6 +254,7 @@ void DrawGame(void){
             }
         }
 
+        // DESENHA AS BALAS
         Bullet *b = bullet;
         while (b !=NULL){
             DrawRectangleV(b->position, (Vector2){bullet_size, bullet_size}, ORANGE);
@@ -259,7 +263,7 @@ void DrawGame(void){
 
         DrawRectangle(player.position.x, player.position.y, player.width, player.height, RED);
 
-        //Desenha a vida
+        // DESENHA AS VIDAS
         int coracaoX = 10;
         int tamanho_coracao = 30;
         for (int i = 1 ; i <= player.vida; i++){
@@ -267,7 +271,7 @@ void DrawGame(void){
             coracaoX += tamanho_coracao + 10;
         }
 
-        //Desenha o tempo
+        // DESENHA O TEMPO DE JOGO
         int minutos = (int)tempo_jogado / 60;
         int segundos = (int)tempo_jogado % 60;
         DrawText(TextFormat("%02d:%02d", minutos, segundos), screenWidth - screenWidth/10 , 10, 30 , BLACK);
@@ -298,6 +302,7 @@ void DrawGame(void){
     // -------------------------------------------------------------------------------------------------   
 }
 
+// FUNÇÃO PARA REINICIAR O JOGO
 void reiniciar(void){
     Bullet *bala = bullet;
     while (bala != NULL){
@@ -306,7 +311,8 @@ void reiniciar(void){
         bala = next;
     }
     bullet = NULL;
-
+    
+    //Redefinição de variaveis para o valor padrão de jogo
     tempo_jogado = 0.0f;
     cronometro_last_spawn = 0.0f;
     intervalo = 2.5f;
@@ -322,7 +328,9 @@ void reiniciar(void){
 
 }
 
+// CONTROLE DE ESTADO ATUAL DO JOGO
 void UpdateGame(void){
+    // Enquanto jogo não for inicializado, musica inicial continuará tocando
     if (game_start ==false){
         UpdateMusicStream(homescreen_music);
         if (IsKeyPressed(KEY_L)){
@@ -343,21 +351,22 @@ void UpdateGame(void){
 
     UpdateMusicStream(game_music);
 
+    // Algoritimo para definição do ranking de players
     if (gameOver == true){
         int tecla = GetKeyPressed();
-        if (tecla>0 && pontuacao_salva == false){
-            if (tecla == KEY_BACKSPACE){
-                if (nome_len > 0){
+        if (tecla>0 && pontuacao_salva == false){                      
+            if (tecla == KEY_BACKSPACE){                                // Condição para remoção de caracteres pelo backspace 
+                if (nome_len > 0){                                  
                     nome_len--;
                     nome_player[nome_len] = '\0';
                 }
             }
-            else if (tecla == KEY_ENTER && nome_len == MAX_CHAR_NOME){
+            else if (tecla == KEY_ENTER && nome_len == MAX_CHAR_NOME){  // Condição para prosseguir com o registro do ranking 
                 int minutos = (int)tempo_jogado/60;
                 int segundos = (int)tempo_jogado%60;
-                add_inicio(&ranking, nome_player, minutos, segundos);
-                ordenar(&ranking);
-                salvarRanking(&ranking);
+                add_inicio(&ranking, nome_player, minutos, segundos);   // Função que insere o nome e o tempo de jogo no inicio do ranking.
+                ordenar(&ranking);                                      // Função que ordena os dados inseridos no ranking
+                salvarRanking(&ranking);                                // Função que salva o ranking formatado após a ordenação
                 pontuacao_salva = true;
             } else if(nome_len < MAX_CHAR_NOME && tecla <256){
                 if (isalpha(tecla)){
@@ -424,22 +433,25 @@ void UpdateGame(void){
 
         
         Rectangle bulletRec = {bullet_atual->position.x , bullet_atual->position.y , bullet_size , bullet_size};
-        if (CheckCollisionRecs(playerRec , bulletRec)){
-            player.vida--;
-            Bullet *bullet_morta = bullet_atual;
-            if (bullet_anterior == NULL){
+
+        // COLISÕES ENTRE PLAYER E BALAS
+        if (CheckCollisionRecs(playerRec , bulletRec)){         // Condição para checagem de colisões entre as hitboxes.
+            player.vida--;                                      // Para cada checagem verdadeira, a vida do player diminue
+            Bullet *bullet_morta = bullet_atual;                // Cria um ponteiro temporario para armazenar balas que colidiram com o player
+            if (bullet_anterior == NULL){                       // Caso a bala seja a primeira da lista, o ponteiro será redirecionado para a próxima da lista
                 bullet = bullet_atual->next;
-            } else{
+            } else{                                             // Caso não seja a primeira, o ponteiro anterior irá apontar para a posição atual da lista
                 bullet_anterior->next = bullet_atual->next;
             }
-            bullet_atual = bullet_atual->next;
+            bullet_atual = bullet_atual->next;                  // Avanca o loop
             free(bullet_morta);
-            if (player.vida <= 0){
+            if (player.vida <= 0){                              // Caso as vidas do player acabem, o jogo finaliza.
                 gameOver = true;
             }
             continue;
         }
 
+        // Condição para respawn de balas
         bool saiu = false;
         if (bullet_atual->position.x < -bullet_size || bullet_atual->position.x >= screenWidth || bullet_atual->position.y < -bullet_size || bullet_atual->position.y >= screenHeight){
             saiu = true;
@@ -520,24 +532,30 @@ void UnloadGame(void){
 }
 
 //---RANKING FUNCOES-------------------------------------------------------------------------------------------
+
+// Função adicionar scores no ranking   
 void add_inicio(User **head, char nome[], int minuto, int segundo){
-    User *new = (User*)malloc(sizeof(User));
-    strcpy(new->nome, nome);
-    new->minuto = minuto;
-    new->segundo = segundo;
-    new->next = *head;
-    *head = new;
+    User *new = (User*)malloc(sizeof(User));                            // Criação do nó na lista USER
+    strcpy(new->nome, nome);                                            // Armazena o argumento nome da função
+    new->minuto = minuto;                                               // Armazena os minutos do usuário
+    new->segundo = segundo;                                             // Armazena os segundos do usuário
+    new->next = *head;                                                  // Avança para o próximo nó
+    *head = new;                                                        // o nó head agora é igual ao do new
 
 }
 
+
+// Função para ordenar os players do ranking pelo tempo de jogo
 void ordenar(User **head){
-    if (*head == NULL || (*head)->next == NULL){
+    if (*head == NULL || (*head)->next == NULL){                        // Caso o ranking esteja vazio, a função encerra.
         return;
     }
     int trocou = 1;
     while (trocou){
         User *aux = *head;
         trocou = 0;
+
+        // Bubblesort para posicionar os minutos de jogo por ordem descrescente
         while (aux->next !=NULL){
             if (aux->minuto < aux->next->minuto || (aux->minuto == aux->next->minuto && aux->segundo < aux->next->segundo)){
                 int temp;
