@@ -3,7 +3,9 @@
 #include <stdlib.h>
 #include <time.h>
 #include <math.h>
+#include <ctype.h>
 
+#define MAX_CHAR_NOME 3
 
 typedef struct Inventario{
     int pedra;
@@ -61,11 +63,14 @@ static bool gameOver = false;
 static bool pause = false;
 static bool victory = false;
 static bool game_start = false;
+static bool pontuacao_salva = false;
 static Texture2D homescreen;
 
 
 static Player player = { 0 };
 static struct Bullet *bullet = NULL;
+static char nome_player[MAX_CHAR_NOME + 1 ] = {0};
+static int nome_len = 0;
 
 static Music homescreen_music;
 static Music game_music;
@@ -98,6 +103,14 @@ int main(void)
 
 
     return 0;
+}
+
+void salvarRanking(float tempo_jogado){
+    FILE *ranking = fopen("ranking.txt", "a");
+    int minutos = (int)tempo_jogado/60;
+    int segundos = (int)tempo_jogado%60;
+    fprintf(ranking, "%s %02d:%02d\n", nome_player, minutos, segundos);
+    fclose(ranking);
 }
 
 void InitGame(void){
@@ -237,12 +250,23 @@ void DrawGame(void){
 
         
         if (gameOver) {
-            const char* texto = "GAME OVER";
-            int tamanho_tex = 60;
-            int textWidth_texto = MeasureText(texto, tamanho_tex);
-            int x = (screenWidth - textWidth_texto) / 2;
-            int y = screenHeight / 2 - tamanho_tex / 2;
-            DrawText(texto, x, y, tamanho_tex, RED);
+           const char* go = "GAME OVER";
+            int size = 60;
+            int w = MeasureText(go, size);
+            int x = (screenWidth - w)/2;
+            int y = screenHeight/2 - size/2;
+            DrawText(go, x, y, size, RED);
+
+            // b) Se ainda não salvou, peça o nome
+            if (!pontuacao_salva) {
+                DrawText("Digite seu nome:", x, y + 80, 20, BLACK);
+                DrawText(nome_player, x, y + 110, 30, BLUE);
+            }
+            // c) Se já salvou, oriente para ENTER voltar
+            else {
+                DrawText("Salvo! Pressione [ENTER] para voltar ao menu", 
+                         x - 50, y + 80, 20, DARKGREEN);
+            }
         }
     }
 
@@ -262,8 +286,12 @@ void reiniciar(void){
     cronometro_last_spawn = 0.0f;
     intervalo = 2.5f;
     player.vida = 3;
+    nome_len = 0;
+    nome_player[0] = '\0';
     gameOver=false;
     game_start=false;
+    pontuacao_salva = false;
+
     StopMusicStream(game_music);
     PlayMusicStream(homescreen_music);
 
@@ -284,7 +312,28 @@ void UpdateGame(void){
     UpdateMusicStream(game_music);
 
     if (gameOver == true){
-        if (IsKeyPressed(KEY_ENTER)){
+        int tecla = GetKeyPressed();
+        if (tecla>0 && pontuacao_salva == false){
+            if (tecla == KEY_BACKSPACE){
+                if (nome_len > 0){
+                    nome_len--;
+                    nome_player[nome_len] = '\0';
+                }
+            }
+            else if (tecla == KEY_ENTER && nome_len == MAX_CHAR_NOME){
+                salvarRanking(tempo_jogado);
+                pontuacao_salva = true;
+            } else if(nome_len < MAX_CHAR_NOME && tecla <256){
+                if (isalpha(tecla)){
+                    nome_player[nome_len] = (char)toupper(tecla);
+                    nome_len++;
+                    nome_player[nome_len] = '\0';
+
+                }
+            }
+        }
+
+        if (pontuacao_salva == true && IsKeyPressed(KEY_ENTER)){
             reiniciar();
         }
         return;
