@@ -4,8 +4,17 @@
 #include <time.h>
 #include <math.h>
 #include <ctype.h>
+#include <string.h>
 
 #define MAX_CHAR_NOME 3
+
+
+typedef struct User{
+    char nome[4];
+    int minuto;
+    int segundo;
+    struct User * next;
+} User;
 
 typedef struct Inventario{
     int pedra;
@@ -66,6 +75,8 @@ static bool game_start = false;
 static bool pontuacao_salva = false;
 static Texture2D homescreen;
 
+User *ranking = NULL;
+
 
 static Player player = { 0 };
 static struct Bullet *bullet = NULL;
@@ -105,11 +116,59 @@ int main(void)
     return 0;
 }
 
-void salvarRanking(float tempo_jogado){
-    FILE *ranking = fopen("ranking.txt", "a");
-    int minutos = (int)tempo_jogado/60;
-    int segundos = (int)tempo_jogado%60;
-    fprintf(ranking, "%s %02d:%02d\n", nome_player, minutos, segundos);
+void add_inicio(User **head, char nome[], int minuto, int segundo){
+    User *new = (User*)malloc(sizeof(User));
+    strcpy(new->nome, nome);
+    new->minuto = minuto;
+    new->segundo = segundo;
+    new->next = *head;
+    *head = new;
+
+}
+
+
+void ordenar(User **head){
+    if (*head == NULL || (*head)->next == NULL){
+        return;
+    }
+    int trocou = 1;
+    while (trocou){
+        User *aux = *head;
+        trocou = 0;
+        while (aux->next !=NULL){
+            if (aux->minuto < aux->next->minuto || (aux->minuto == aux->next->minuto && aux->segundo < aux->next->segundo)){
+                int temp;
+                temp = aux->minuto;
+                aux->minuto = aux->next->minuto;
+                aux->next->minuto = temp;
+
+                temp = aux->segundo;
+                aux->segundo = aux->next->segundo;
+                aux->next->segundo = temp;
+
+                char tmp[4];
+                strcpy(tmp, aux->nome);
+                strcpy(aux->nome, aux->next->nome);
+                strcpy(aux->next->nome, tmp);
+                trocou = 1;
+            
+            }
+            aux = aux->next;
+        }
+    }
+}
+
+void salvarRanking(User **head){
+    FILE *ranking = fopen("ranking.txt", "w");
+    if (ranking == NULL){
+        perror("não conseguiu abrir o txt");
+        return;
+    }
+    User *aux = *head;
+    while (aux != NULL){
+        fprintf(ranking, "%s %02d:%02d\n", aux->nome, aux->minuto, aux->segundo);
+        aux = aux->next;
+    } 
     fclose(ranking);
 }
 
@@ -321,7 +380,11 @@ void UpdateGame(void){
                 }
             }
             else if (tecla == KEY_ENTER && nome_len == MAX_CHAR_NOME){
-                salvarRanking(tempo_jogado);
+                int minutos = (int)tempo_jogado/60;
+                int segundos = (int)tempo_jogado%60;
+                add_inicio(&ranking, nome_player, minutos, segundos);
+                ordenar(&ranking);
+                salvarRanking(&ranking);
                 pontuacao_salva = true;
             } else if(nome_len < MAX_CHAR_NOME && tecla <256){
                 if (isalpha(tecla)){
