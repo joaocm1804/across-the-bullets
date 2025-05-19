@@ -73,6 +73,7 @@ static bool pause = false;
 static bool victory = false;
 static bool game_start = false;
 static bool pontuacao_salva = false;
+static bool leaderboard = false;
 static Texture2D homescreen;
 
 User *ranking = NULL;
@@ -172,6 +173,25 @@ void salvarRanking(User **head){
     fclose(ranking);
 }
 
+
+void printarLeaderboard(void){
+    FILE *leaderboard = fopen("ranking.txt", "r");;
+    if (leaderboard == NULL){
+        DrawText("Ranking vazio:(", screenWidth/2, screenHeight/2, 25, RED);
+        return;
+    }
+    char c[10];
+    int count_l = 1;
+    int linha = 0;
+    int espaco = 25;
+    while (fgets(c, sizeof(c), leaderboard) != NULL){
+        DrawText(c, screenWidth/2, screenHeight/2 + linha * espaco, 20, RED);
+        linha++;
+    }
+    fclose(leaderboard);
+}
+
+
 void InitGame(void){
     srand(time(NULL));
     Image imgstart = LoadImage("assets/home_8bit.jpeg");
@@ -239,7 +259,10 @@ void InitGame(void){
 
 void DrawGame(void){
     BeginDrawing();
-    if (game_start == false){
+    if (leaderboard == true){
+        ClearBackground(RAYWHITE);
+        printarLeaderboard();
+    }else if (game_start == false){
         ClearBackground(RAYWHITE);
         DrawTexture(homescreen, 0, 0 , WHITE);
 
@@ -359,11 +382,18 @@ void reiniciar(void){
 void UpdateGame(void){
     if (game_start ==false){
         UpdateMusicStream(homescreen_music);
-        if (IsKeyPressed(KEY_ENTER)){
+        if (IsKeyPressed(KEY_L)){
+            leaderboard = true;
+        }
+        else if (IsKeyPressed(KEY_ENTER)){
+            if (leaderboard ==true){
+                leaderboard = false;
+            }else{
             game_start= true;
             StopMusicStream(homescreen_music);
             PlayMusicStream(game_music);
-            SetMusicVolume(game_music, 0.2f);
+            SetMusicVolume(game_music, 0.1f);
+            }
         }
         return;
     }
