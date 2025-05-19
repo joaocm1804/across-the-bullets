@@ -113,7 +113,6 @@ int main(void)
     UnloadGame();  
     CloseWindow(); 
 
-
     return 0;
 }
 
@@ -173,22 +172,51 @@ void salvarRanking(User **head){
     fclose(ranking);
 }
 
-
 void printarLeaderboard(void){
-    FILE *leaderboard = fopen("ranking.txt", "r");;
+    static int frameCount = 0;
+    frameCount++; 
+
+    FILE *leaderboard = fopen("ranking.txt", "r");
     if (leaderboard == NULL){
-        DrawText("Ranking vazio:(", screenWidth/2, screenHeight/2, 25, RED);
+        DrawText("Ranking vazio :(", screenWidth/2 - 100, screenHeight/2, 25, RED);
         return;
     }
-    char c[10];
-    int count_l = 1;
+
     int linha = 0;
-    int espaco = 25;
-    while (fgets(c, sizeof(c), leaderboard) != NULL){
-        DrawText(c, screenWidth/2, screenHeight/2 + linha * espaco, 20, RED);
-        linha++;
+    int espacamento = 30;
+
+    DrawText("RANKING", screenWidth / 2 - 100, 100, 40, DARKGRAY);
+
+    DrawText("POS", screenWidth / 2 - 200, 160, 20, GRAY);
+    DrawText("NOME", screenWidth / 2 - 100, 160, 20, GRAY);
+    DrawText("TEMPO", screenWidth / 2 + 50, 160, 20, GRAY);
+
+    char nome[4];
+    int min, seg;
+    int pos = 1;
+
+    while (fscanf(leaderboard, "%3s %d:%d", nome, &min, &seg) == 3 && pos <= 10){
+        char tempo[10];
+        sprintf(tempo, "%02d:%02d", min, seg);
+
+        int y = 160 + espacamento * pos;
+
+        DrawText(TextFormat("%2d.", pos), screenWidth / 2 - 200, y, 20, BLACK);
+        DrawText(nome, screenWidth / 2 - 100, y, 20, BLACK);
+        DrawText(tempo, screenWidth / 2 + 50, y, 20, BLACK);
+
+        pos++;
     }
+
     fclose(leaderboard);
+        
+    const char *mensagem = "Pressione [ENTER] para voltar ao menu";
+    int fontSize = 20;
+    int larguraTexto = MeasureText(mensagem, fontSize);
+
+    if ((frameCount / 30) % 2 == 0) {
+        DrawText(mensagem, screenWidth / 2 - larguraTexto / 2, screenHeight - 100, fontSize, DARKGREEN);
+    }
 }
 
 
@@ -342,7 +370,7 @@ void DrawGame(void){
             // b) Se ainda não salvou, peça o nome
             if (!pontuacao_salva) {
                 DrawText("Digite seu nome:", x, y + 80, 20, BLACK);
-                DrawText(nome_player, x, y + 110, 30, BLUE);
+                DrawText(nome_player, x, y + 110, 30, BLACK);
             }
             // c) Se já salvou, oriente para ENTER voltar
             else {
