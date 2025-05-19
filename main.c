@@ -261,7 +261,9 @@ void DrawGame(void){
             b = b->next;
         }
 
-        DrawRectangle(player.position.x, player.position.y, player.width, player.height, RED);
+        if (!gameOver) {
+            DrawRectangle(player.position.x, player.position.y, player.width, player.height, RED);
+        }
 
         // DESENHA AS VIDAS
         int coracaoX = 10;
@@ -296,6 +298,7 @@ void DrawGame(void){
                 DrawText("Salvo! Pressione [ENTER] para voltar ao menu", 
                          x - 50, y + 80, 20, DARKGREEN);
             }
+
         }
     }
     EndDrawing();
