@@ -254,15 +254,16 @@ void DrawGame(void){
             }
         }
 
-        // DESENHA AS BALAS
-        Bullet *b = bullet;
-        while (b !=NULL){
-            DrawRectangleV(b->position, (Vector2){bullet_size, bullet_size}, ORANGE);
-            b = b->next;
-        }
-
         if (!gameOver) {
+            // DESENHA O PLAYER
             DrawRectangle(player.position.x, player.position.y, player.width, player.height, RED);
+
+            // DESENHA AS BALAS
+            Bullet *b = bullet;
+                while (b !=NULL){
+                DrawRectangleV(b->position, (Vector2){bullet_size, bullet_size}, ORANGE);
+                b = b->next;
+                }
         }
 
         // DESENHA AS VIDAS
