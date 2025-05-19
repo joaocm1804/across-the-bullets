@@ -18,6 +18,7 @@ typedef struct Player{
     Inventario backpack;
     int width;
     int height;
+    float resultado_tempo;
     bool colisao;
 } Player;
 
@@ -33,6 +34,7 @@ typedef struct Bullet{
 static Texture2D background;
 static Texture2D personagem;
 static Texture2D bulletTex;
+static Texture2D vida;
 
 // Variaveis Globais:
 //---Total-------------------------------
@@ -117,6 +119,7 @@ void InitGame(void){
     background = LoadTexture("assets/background.png");
     personagem = LoadTexture("assets/Unarmed_Idle_full.png");
     bulletTex = LoadTexture("assets/bullet.png");
+    vida = LoadTexture("assets/vida.png");
 
     //inicializa as variáveis do player
  
@@ -203,10 +206,27 @@ void DrawGame(void){
             }
         }
 
-        int rectangleSize = 40;
+
+        //Desenha a vida
+        int coracaoX = 10;
+        int tamanho_coracao = 30;
+        for (int i = 1 ; i <= player.vida; i++){
+            DrawTexture(vida, coracaoX, 10, WHITE);
+            coracaoX += tamanho_coracao + 10;
+        }
+
+
 
         //Desenhar boneco
         DrawRectangle(player.position.x, player.position.y, player.width, player.height, RED);
+
+        //Desenha o tempo
+        int minutos = (int)tempo_jogado / 60;
+        int segundos = (int)tempo_jogado % 60;
+        DrawText(TextFormat("%02d:%02d", minutos, segundos), screenWidth - screenWidth/10 , 10, 30 , BLACK);
+
+        // DrawText(TextFormat("%0.02f", (float)tempo_jogado/60), screenWidth - screenWidth/18 , 10, 30 , BLACK);
+        
 
         Bullet *b = bullet;
         while (b !=NULL){
@@ -376,6 +396,7 @@ void UnloadGame(void){
     UnloadTexture(background);
     UnloadTexture(personagem);
     UnloadTexture(homescreen);
+    UnloadTexture(vida);
     UnloadMusicStream(homescreen_music);
     UnloadMusicStream(game_music);
 
