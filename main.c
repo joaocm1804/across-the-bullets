@@ -57,6 +57,7 @@ static Texture2D personagem;
 static Texture2D bulletTex;
 static Texture2D vida;
 static Texture2D homescreen;
+static Texture2D leaderboard_screen;
 // ------------------------------------------------------------
 
 // Inicializa musicas -----------------------------------------
@@ -137,10 +138,16 @@ void InitGame(void){
     ImageResize(&imgstart, screenWidth, screenHeight);
     homescreen = LoadTextureFromImage(imgstart);
     UnloadImage(imgstart);
+    //--------------------------------------------------------------------------------------------------
     background = LoadTexture("assets/background.png");
     personagem = LoadTexture("assets/Unarmed_Idle_full.png");
     bulletTex = LoadTexture("assets/bullet.png");
     vida = LoadTexture("assets/vida.png");
+    //--------------------------------------------------------------------------------------------------
+    Image imgleaderboard = LoadImage("assets/leaderboard_screen.png");
+    ImageResize(&imgleaderboard, screenWidth, screenHeight);
+    leaderboard_screen = LoadTextureFromImage(imgleaderboard);
+    UnloadImage(imgleaderboard);
     // -------------------------------------------------------------------------------------------------
 
     // Carrega as musicas -----------------------------------------------------------------------------
@@ -200,6 +207,7 @@ void DrawGame(void){
     // RANKING -----------------------------------------------------------------------------------------
     if (leaderboard == true){
         ClearBackground(RAYWHITE);
+        DrawTexture(leaderboard_screen, 0, 0, WHITE);
         printarLeaderboard();
     // -------------------------------------------------------------------------------------------------   
 
