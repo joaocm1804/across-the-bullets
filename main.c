@@ -702,7 +702,22 @@ void printarLeaderboard(void){
     }
 }
 
+
+void limparRanking(User **head) {
+    User *atual = *head;
+    while (atual != NULL) {
+        User *prox = atual->next;
+        free(atual);
+        atual = prox;
+    }
+    *head = NULL;
+}
+
+
+
 void carregarRanking(User **head){
+
+    limparRanking(head);
     FILE *ranking = fopen("ranking.txt", "r");
     
     if (ranking == NULL) {
