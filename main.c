@@ -97,6 +97,7 @@ static struct Bullet *bullet = NULL;
 User *ranking = NULL;
 static char nome_player[MAX_CHAR_NOME + 1 ] = {0};
 static int nome_len = 0;
+double colisaoTime = -10; 
 
 //---FUNCOES PRINCIPAIS----------------------------------------
 static void InitGame(void);         // Initialize game
@@ -288,8 +289,18 @@ void DrawGame(void){
         }
 
         if (!gameOver) {
-            // DESENHA O PLAYER
-            DrawRectangle(player.position.x, player.position.y, player.width, player.height, RED);
+            // PISCAR AO SER ATINGIDO ------------------------------------------------------------------------------
+            double tempoAtual = GetTime();
+            Color playerColor = RED;
+
+            if (tempoAtual - colisaoTime < 0.8) { // quantidade de segundos que pisca
+                if (((int)(tempoAtual * 8)) % 2 == 0) { // quanto maior a multiplicação -> mais rápido pisca
+                    playerColor = (Color){ 255, 180, 180, 255 }; // vermelho claro
+                }
+            }
+            // -----------------------------------------------------------------------------------------------------
+            // Desenha o jogador com a cor apropriada
+            DrawRectangle(player.position.x, player.position.y, player.width, player.height, playerColor);
 
             // DESENHA AS BALAS
             Bullet *b = bullet;
@@ -495,6 +506,7 @@ void UpdateGame(void){
         if (CheckCollisionRecs(playerRec , bulletRec)){         // Condição para checagem de colisões entre as hitboxes.
             PlaySound(sound_atingiu);
             player.vida--;                                      // Para cada checagem verdadeira, a vida do player diminue
+            colisaoTime = GetTime();                            // Tempo em que ocorre a colisao
             Bullet *bullet_morta = bullet_atual;                // Cria um ponteiro temporario para armazenar balas que colidiram com o player
             if (bullet_anterior == NULL){                       // Caso a bala seja a primeira da lista, o ponteiro será redirecionado para a próxima da lista
                 bullet = bullet_atual->next;
