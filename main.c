@@ -66,6 +66,7 @@ static Texture2D bulletTexNorte, bulletTexSul, bulletTexLeste, bulletTexOeste;
 // Inicializa musicas -----------------------------------------
 static Music homescreen_music;
 static Music game_music;
+static Sound sound_atingiu;
 // ------------------------------------------------------------
 
 // Tempo ------------------------------------------------------
@@ -181,6 +182,8 @@ void InitGame(void){
     homescreen_music = LoadMusicStream("assets/audio/music/acrosstheuniverse.mp3");
     game_music = LoadMusicStream("assets/audio/music/paint_it_black.mp3");
     PlayMusicStream(homescreen_music); // inicializa musica da home
+    sound_atingiu = LoadSound("assets/audio/effects/explosion.wav");
+    SetSoundVolume(sound_atingiu, 0.5f);
     // -------------------------------------------------------------------------------------------------
     // -------------------------------------------------------------------------------------------------
 
@@ -293,10 +296,10 @@ void DrawGame(void){
                 while (b !=NULL){
                 DrawTextureV(b->texture, b->position, RAYWHITE);
 
-                //codigo para verificar tamanho da hitbox
+                // //codigo para verificar tamanho da hitbox
                 // float neww = b->texture.width  * ESCALA_HITBOX;
                 // float newh = b->texture.height * ESCALA_HITBOX;
-                // //variaveis pra centralizar a bala na hitbox
+                // // //variaveis pra centralizar a bala na hitbox
                 // float centralizarX = (b->texture.width  - neww) * 0.5f;
                 // float centralizarY = (b->texture.height - newh) * 0.5f;
 
@@ -490,6 +493,7 @@ void UpdateGame(void){
 
         // COLISÕES ENTRE PLAYER E BALAS
         if (CheckCollisionRecs(playerRec , bulletRec)){         // Condição para checagem de colisões entre as hitboxes.
+            PlaySound(sound_atingiu);
             player.vida--;                                      // Para cada checagem verdadeira, a vida do player diminue
             Bullet *bullet_morta = bullet_atual;                // Cria um ponteiro temporario para armazenar balas que colidiram com o player
             if (bullet_anterior == NULL){                       // Caso a bala seja a primeira da lista, o ponteiro será redirecionado para a próxima da lista
