@@ -109,6 +109,8 @@ void printarLeaderboard(void);
 void add_inicio(User **ranking, char nome[], int min, int seg);
 void ordenar(User **ranking);
 void salvarRanking(User **ranking);
+void carregarRanking(User **ranking);
+
 
 //-------------------------------------------------------------
 
@@ -410,6 +412,7 @@ void UpdateGame(void){
             else if (tecla == KEY_ENTER && nome_len == MAX_CHAR_NOME){  // Condição para prosseguir com o registro do ranking 
                 int minutos = (int)tempo_jogado/60;
                 int segundos = (int)tempo_jogado%60;
+                carregarRanking(&ranking);   
                 add_inicio(&ranking, nome_player, minutos, segundos);   // Função que insere o nome e o tempo de jogo no inicio do ranking.
                 ordenar(&ranking);                                      // Função que ordena os dados inseridos no ranking
                 salvarRanking(&ranking);                                // Função que salva o ranking formatado após a ordenação
@@ -693,5 +696,22 @@ void printarLeaderboard(void){
     if ((frameCount / 30) % 2 == 0) {
         DrawText(mensagem, screenWidth / 2 - larguraTexto / 2, screenHeight - 100, fontSize, DARKGREEN);
     }
+}
+
+void carregarRanking(User **head){
+    FILE *ranking = fopen("ranking.txt", "r");
+    
+    if (ranking == NULL) {
+        return;
+    }
+
+    char nome[4];
+    int minuto, segundo;
+
+    while (fscanf(ranking, "%3s %d:%d", nome, &minuto, &segundo) == 3) {
+        add_inicio(head, nome, minuto, segundo); 
+    }
+
+    fclose(ranking);
 }
 //--------------------------------------------------------------------------------------------------------
