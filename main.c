@@ -76,7 +76,7 @@ static float qtd_diminuir_por_s = 0.1f; //rampa de dificulda (quanto maior, mais
 //---Balas-----------------------------------------------------
 static float bullet_speed = 300.0f;
 static float bullet_speed_increase = 10.0f; //incremento de velocidade
-static float bullet_size = 40;
+static float bullet_size = 70;
 // ------------------------------------------------------------
 
 //---Booleanos-------------------------------------------------
@@ -261,7 +261,16 @@ void DrawGame(void){
             // DESENHA AS BALAS
             Bullet *b = bullet;
                 while (b !=NULL){
-                DrawRectangleV(b->position, (Vector2){bullet_size, bullet_size}, ORANGE);
+                float scale = bullet_size/(float)bulletTex.width;
+                if (b->direction.x == 0 && b->direction.y == 1){
+                    DrawTextureEx(bulletTex, b->position, 90.0f, scale, ORANGE);
+                } else if (b->direction.x == 0 && b->direction.y == -1){
+                    DrawTextureEx(bulletTex, b->position, -90.0f, scale, ORANGE);
+                }else if (b->direction.x == -1 && b->direction.y == 0){
+                    DrawTextureEx(bulletTex, b->position, 180.0f, scale, ORANGE);
+                }else if (b->direction.x == 1 && b->direction.y == 0){
+                    DrawTextureEx(bulletTex, b->position, 0.0f, scale, ORANGE);
+                }
                 b = b->next;
                 }
         }
