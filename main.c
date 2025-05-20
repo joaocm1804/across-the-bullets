@@ -326,6 +326,8 @@ void reiniciar(void){
     gameOver=false;
     game_start=false;
     pontuacao_salva = false;
+    player.position.x = screenWidth/2 - 20; 
+    player.position.y = screenHeight/2 - 20;
 
     StopMusicStream(game_music);
     PlayMusicStream(homescreen_music);
