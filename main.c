@@ -44,6 +44,15 @@ typedef struct Bullet{
     struct Bullet * next;
     Texture2D texture;
 } Bullet;
+
+
+typedef struct ExtraLife {
+    Vector2 position;
+    bool ativo;
+    float tempo_dps_respawn;
+} ExtraLife;
+
+
 // -----------------------------------------------------------
 
 
@@ -75,6 +84,7 @@ static float cronometro_last_spawn = 0.0f; //quanto tempo passou desde a ultima 
 static float intervalo = 2.5f; //intervalo que as balas surgem
 static float intervalo_minimo = 0.3f; //não pode disparar mais rapido que isso
 static float qtd_diminuir_por_s = 0.1f; //rampa de dificulda (quanto maior, mais rapidamente fica dificil)
+
 // ------------------------------------------------------------
 
 //---Balas-----------------------------------------------------
@@ -97,6 +107,11 @@ static struct Bullet *bullet = NULL;
 User *ranking = NULL;
 static char nome_player[MAX_CHAR_NOME + 1 ] = {0};
 static int nome_len = 0;
+
+
+ExtraLife extralife = {0};
+const float tempo_de_respawn = 10.0f;
+const int extralifeTamanho  = 20;
 
 //---FUNCOES PRINCIPAIS----------------------------------------
 static void InitGame(void);         // Initialize game
@@ -319,6 +334,10 @@ void DrawGame(void){
             coracaoX += tamanho_coracao + 10;
         }
 
+        if (extralife.ativo){
+            DrawRectangleV(extralife.position , (Vector2){extralifeTamanho, extralifeTamanho} , RED);
+        }
+
         // DESENHA O TEMPO DE JOGO
         int minutos = (int)tempo_jogado / 60;
         int segundos = (int)tempo_jogado % 60;
@@ -373,9 +392,14 @@ void reiniciar(void){
     pontuacao_salva = false;
     player.position.x = screenWidth/2 - 20; 
     player.position.y = screenHeight/2 - 20;
+    extralife.ativo = false;
+    extralife.tempo_dps_respawn = 0.0f;
+
 
     StopMusicStream(game_music);
     PlayMusicStream(homescreen_music);
+
+    
 
 }
 
@@ -437,6 +461,7 @@ void UpdateGame(void){
     }
 
 
+    
 
 
 
@@ -446,7 +471,6 @@ void UpdateGame(void){
     cronometro_last_spawn += deltaTime; 
     
     
-
     //  movimentacao do jogador inclusive na diagonal
     if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)){
         player.position.x -= player.speed;
@@ -573,6 +597,28 @@ void UpdateGame(void){
             bullet = new;
         }
     }
+
+    extralife.tempo_dps_respawn += deltaTime;
+
+    if (!extralife.ativo && extralife.tempo_dps_respawn >= tempo_de_respawn){
+        extralife.position.x = GetRandomValue(0 , screenWidth - extralifeTamanho);
+        extralife.position.y = GetRandomValue(0, screenHeight - extralifeTamanho);
+        extralife.ativo = true;
+        extralife.tempo_dps_respawn = 0.0f;
+    }
+
+    if (extralife.ativo){
+        Rectangle vida_extra = { extralife.position.x , extralife.position.y , extralifeTamanho , extralifeTamanho};
+        if (CheckCollisionRecs(playerRec, vida_extra)){
+        if (player.vida < 3){
+            player.vida ++;
+        }
+        extralife.ativo = false;
+    }
+
+    }
+
+
 }
 
 
