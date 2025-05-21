@@ -8,6 +8,8 @@
 
 #define MAX_CHAR_NOME 3
 #define ESCALA_HITBOX 0.65f
+#define MAX_BARREIRA 5
+#define BARREIRA_TAMANHO 95
 
 
 
@@ -53,6 +55,13 @@ typedef struct ExtraLife {
 } ExtraLife;
 
 
+typedef struct Barreira {
+    Vector2 position;
+    bool ativa;
+    float tempo_de_vida;
+} Barreira;
+
+
 // -----------------------------------------------------------
 
 
@@ -70,6 +79,7 @@ static Texture2D vida;
 static Texture2D homescreen;
 static Texture2D leaderboard_screen;
 static Texture2D bulletTexNorte, bulletTexSul, bulletTexLeste, bulletTexOeste;
+static Texture2D imgmadeira;
 // ------------------------------------------------------------
 
 // Inicializa musicas -----------------------------------------
@@ -112,6 +122,8 @@ static int nome_len = 0;
 ExtraLife extralife = {0};
 const float tempo_de_respawn = 10.0f;
 const int extralifeTamanho  = 20;
+
+Barreira barreira[MAX_BARREIRA];
 
 //---FUNCOES PRINCIPAIS----------------------------------------
 static void InitGame(void);         // Initialize game
@@ -160,6 +172,7 @@ void InitGame(void){
     ImageResize(&imgstart, screenWidth, screenHeight);
     homescreen = LoadTextureFromImage(imgstart);
     UnloadImage(imgstart);
+
     //--------------------------------------------------------------------------------------------------
     background = LoadTexture("assets/background.png");
     personagem = LoadTexture("assets/Unarmed_Idle_full.png");
@@ -191,6 +204,12 @@ void InitGame(void){
     ImageResize(&imgleaderboard, screenWidth, screenHeight);
     leaderboard_screen = LoadTextureFromImage(imgleaderboard);
     UnloadImage(imgleaderboard);
+
+
+    Image imgwood = LoadImage("assets/wood_barreira.png");
+    ImageResize(&imgwood, BARREIRA_TAMANHO, BARREIRA_TAMANHO);
+    imgmadeira = LoadTextureFromImage(imgwood);
+    UnloadImage(imgwood);
     // -------------------------------------------------------------------------------------------------
 
     // Carrega as musicas -----------------------------------------------------------------------------
@@ -209,8 +228,7 @@ void InitGame(void){
     player.position = (Vector2){(screenWidth/2) - player.width/2, (screenHeight/2) - player.height/2};
     player.vida = 3;
     player.speed = 7;
-    player.backpack.madeira = 0;
-    player.backpack.pedra = 0;
+    player.backpack.madeira = 5;
     // -------------------------------------------------------------------------------------------------
 
     // BALAS -------------------------------------------------------------------------------------------
@@ -249,7 +267,13 @@ void InitGame(void){
         bullet = b;
     }    
     // -------------------------------------------------------------------------------------------------
+    for (int i = 0; i < MAX_BARREIRA; i++) {
+        if (barreira[i].ativa){
+            barreira[i].ativa = false;
+        }
+    }
 }
+
 
 void DrawGame(void){
     BeginDrawing();
@@ -324,7 +348,23 @@ void DrawGame(void){
                 // DrawRectangleLinesEx(hitbox, 1, RED);//desenho para teste da hitbox
                 b = b->next;
                 }
+            DrawText(TextFormat("Madeira: %d", player.backpack.madeira), 10, 50, 20, DARKBROWN);
+
+            for (int i = 0; i < MAX_BARREIRA; i++) {
+                if (barreira[i].ativa) {
+                    DrawTextureV(imgmadeira, barreira[i].position, WHITE);    
+                }
+            }
+
+            if (extralife.ativo){
+                DrawRectangleV(extralife.position , (Vector2){extralifeTamanho, extralifeTamanho} , RED);
+            }
+
         }
+
+
+     
+
 
         // DESENHA AS VIDAS
         int coracaoX = 10;
@@ -332,10 +372,6 @@ void DrawGame(void){
         for (int i = 1 ; i <= player.vida; i++){
             DrawTexture(vida, coracaoX, 10, WHITE);
             coracaoX += tamanho_coracao + 10;
-        }
-
-        if (extralife.ativo){
-            DrawRectangleV(extralife.position , (Vector2){extralifeTamanho, extralifeTamanho} , RED);
         }
 
         // DESENHA O TEMPO DE JOGO
@@ -385,6 +421,7 @@ void reiniciar(void){
     cronometro_last_spawn = 0.0f;
     intervalo = 2.5f;
     player.vida = 3;
+    player.backpack.madeira = 5;
     nome_len = 0;
     nome_player[0] = '\0';
     gameOver=false;
@@ -461,6 +498,24 @@ void UpdateGame(void){
     }
 
 
+    if (IsKeyPressed(KEY_SPACE) && player.backpack.madeira > 0){
+        for (int i = 0; i < MAX_BARREIRA; i++) {
+            if (!barreira[i].ativa) {
+                barreira[i].ativa = true;
+                barreira[i].position = (Vector2){
+                    player.position.x + player.width / 2 - BARREIRA_TAMANHO / 2,
+                    player.position.y + player.height / 2 - BARREIRA_TAMANHO / 2
+                };
+                barreira[i].tempo_de_vida = 10.0f;
+                player.backpack.madeira--;
+                break;
+            }
+        }
+    }
+
+
+
+
     
 
 
@@ -514,6 +569,43 @@ void UpdateGame(void){
         float centralizarY = (bullet_atual->texture.height - newh) / 2.0f;
         
         Rectangle bulletRec = {bullet_atual->position.x +centralizarX, bullet_atual->position.y +centralizarY, neww , newh};
+
+        bool bloqueada = false;
+
+        for (int i = 0; i < MAX_BARREIRA; i++) {
+            if (barreira[i].ativa) {
+                Rectangle barreiraRec = {barreira[i].position.x, barreira[i].position.y, BARREIRA_TAMANHO, BARREIRA_TAMANHO};
+
+                if (CheckCollisionRecs(barreiraRec, bulletRec)) {
+                    // Bala atinge barreira -> barreira some, bala também
+                    barreira[i].ativa = false;
+                    bloqueada = true;
+                    break;
+                }
+            }
+        }
+
+        for (int i = 0; i < MAX_BARREIRA; i++) {
+            if (barreira[i].ativa) {
+                barreira[i].tempo_de_vida -= deltaTime;
+                if (barreira[i].tempo_de_vida <= 0) {
+                    barreira[i].ativa = false;
+                }
+            }
+        }
+
+
+        if (bloqueada) {
+            Bullet *bullet_morta = bullet_atual;
+            if (bullet_anterior == NULL){
+                bullet = bullet_atual->next;
+            } else{
+                bullet_anterior->next = bullet_atual->next;
+            }
+            bullet_atual = bullet_atual->next;
+            free(bullet_morta);
+            continue;
+        }
 
         // COLISÕES ENTRE PLAYER E BALAS
         if (CheckCollisionRecs(playerRec , bulletRec)){         // Condição para checagem de colisões entre as hitboxes.
@@ -618,7 +710,6 @@ void UpdateGame(void){
 
     }
 
-
 }
 
 
@@ -627,6 +718,7 @@ void UnloadGame(void){
     UnloadTexture(personagem);
     UnloadTexture(homescreen);
     UnloadTexture(vida);
+    UnloadTexture(imgmadeira);
     UnloadMusicStream(homescreen_music);
     UnloadMusicStream(game_music);
 
