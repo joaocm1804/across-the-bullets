@@ -488,7 +488,7 @@ void UpdateGame(void){
     }
 
 
-    if (IsKeyPressed(KEY_Q) && player.backpack.madeira > 0){
+    if (IsKeyPressed(KEY_SPACE) && player.backpack.madeira > 0){
         for (int i = 0; i < MAX_BARREIRA; i++) {
             if (!barreira[i].ativa) {
                 barreira[i].ativa = true;
