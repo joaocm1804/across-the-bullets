@@ -255,7 +255,7 @@ void InitGame(void){
     player.backpack.madeira = 5;
     // -------------------------------------------------------------------------------------------------
     for (int i =0; i < 6; i++){
-        char caminho[64];
+        char caminho[44];
         sprintf(caminho, "assets/player/right/playerdireita_%02d.png", i+1);
         img = LoadImage(caminho);
         ImageResize(&img, player.width+5, player.height+5);
@@ -264,7 +264,7 @@ void InitGame(void){
     }
 
     for (int i =0; i < 6; i++){
-        char caminho[64];
+        char caminho[45];
         sprintf(caminho, "assets/player/left/player-esquerda_%02d.png", i+1);
         img = LoadImage(caminho);
         ImageResize(&img, player.width+5, player.height+5);
@@ -273,7 +273,7 @@ void InitGame(void){
     }
 
     for (int i =0; i < 4; i++){
-        char caminho[64];
+        char caminho[39];
         sprintf(caminho, "assets/player/up/player-cima_%02d.png", i+1);
         img = LoadImage(caminho);
         ImageResize(&img, player.width+5, player.height+5);
@@ -282,7 +282,7 @@ void InitGame(void){
     }
 
     for (int i =0; i < 6; i++){
-        char caminho[64];
+        char caminho[42];
         sprintf(caminho, "assets/player/down/player-baixo_%02d.png", i+1);
         img = LoadImage(caminho);
         ImageResize(&img, player.width+5, player.height+5);
