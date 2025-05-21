@@ -220,7 +220,6 @@ void InitGame(void){
     player.vida = 3;
     player.speed = 7;
     player.backpack.madeira = 5;
-    player.backpack.pedra = 3;
     // -------------------------------------------------------------------------------------------------
 
     // BALAS -------------------------------------------------------------------------------------------
@@ -340,14 +339,19 @@ void DrawGame(void){
                 }
             DrawText(TextFormat("Madeira: %d", player.backpack.madeira), 10, 50, 20, DARKBROWN);
 
-        }
+            for (int i = 0; i < MAX_BARREIRA; i++) {
+                if (barreira[i].ativa) {
+                    DrawRectangleV(barreira[i].position, (Vector2){BARREIRA_TAMANHO, BARREIRA_TAMANHO}, BROWN);
+                }       
+            }
 
 
-        for (int i = 0; i < MAX_BARREIRA; i++) {
-            if (barreira[i].ativa) {
-                DrawRectangleV(barreira[i].position, (Vector2){BARREIRA_TAMANHO, BARREIRA_TAMANHO}, BROWN);
-            }       
+            if (extralife.ativo){
+                DrawRectangleV(extralife.position , (Vector2){extralifeTamanho, extralifeTamanho} , RED);
+            }
+
         }
+
 
      
 
@@ -358,10 +362,6 @@ void DrawGame(void){
         for (int i = 1 ; i <= player.vida; i++){
             DrawTexture(vida, coracaoX, 10, WHITE);
             coracaoX += tamanho_coracao + 10;
-        }
-
-        if (extralife.ativo){
-            DrawRectangleV(extralife.position , (Vector2){extralifeTamanho, extralifeTamanho} , RED);
         }
 
         // DESENHA O TEMPO DE JOGO
@@ -411,6 +411,7 @@ void reiniciar(void){
     cronometro_last_spawn = 0.0f;
     intervalo = 2.5f;
     player.vida = 3;
+    player.backpack.madeira = 5;
     nome_len = 0;
     nome_player[0] = '\0';
     gameOver=false;
