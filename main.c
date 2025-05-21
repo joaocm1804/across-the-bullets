@@ -8,6 +8,8 @@
 
 #define MAX_CHAR_NOME 3
 #define ESCALA_HITBOX 0.65f
+#define MAX_BARREIRA 5
+#define BARREIRA_TAMANHO 70
 
 
 
@@ -51,6 +53,12 @@ typedef struct ExtraLife {
     bool ativo;
     float tempo_dps_respawn;
 } ExtraLife;
+
+
+typedef struct Barreira {
+    Vector2 position;
+    bool ativa;
+} Barreira;
 
 
 // -----------------------------------------------------------
@@ -112,6 +120,8 @@ static int nome_len = 0;
 ExtraLife extralife = {0};
 const float tempo_de_respawn = 10.0f;
 const int extralifeTamanho  = 20;
+
+Barreira barreira[MAX_BARREIRA];
 
 //---FUNCOES PRINCIPAIS----------------------------------------
 static void InitGame(void);         // Initialize game
@@ -209,8 +219,8 @@ void InitGame(void){
     player.position = (Vector2){(screenWidth/2) - player.width/2, (screenHeight/2) - player.height/2};
     player.vida = 3;
     player.speed = 7;
-    player.backpack.madeira = 0;
-    player.backpack.pedra = 0;
+    player.backpack.madeira = 5;
+    player.backpack.pedra = 3;
     // -------------------------------------------------------------------------------------------------
 
     // BALAS -------------------------------------------------------------------------------------------
@@ -249,7 +259,11 @@ void InitGame(void){
         bullet = b;
     }    
     // -------------------------------------------------------------------------------------------------
+    for (int i = 0; i < MAX_BARREIRA; i++) {
+        barreira[i].ativa = false;
+    }
 }
+
 
 void DrawGame(void){
     BeginDrawing();
@@ -324,7 +338,19 @@ void DrawGame(void){
                 // DrawRectangleLinesEx(hitbox, 1, RED);//desenho para teste da hitbox
                 b = b->next;
                 }
+            DrawText(TextFormat("Madeira: %d", player.backpack.madeira), 10, 50, 20, DARKBROWN);
+
         }
+
+
+        for (int i = 0; i < MAX_BARREIRA; i++) {
+            if (barreira[i].ativa) {
+                DrawRectangleV(barreira[i].position, (Vector2){BARREIRA_TAMANHO, BARREIRA_TAMANHO}, BROWN);
+            }       
+        }
+
+     
+
 
         // DESENHA AS VIDAS
         int coracaoX = 10;
@@ -461,6 +487,23 @@ void UpdateGame(void){
     }
 
 
+    if (IsKeyPressed(KEY_Q) && player.backpack.madeira > 0){
+        for (int i = 0; i < MAX_BARREIRA; i++) {
+            if (!barreira[i].ativa) {
+                barreira[i].ativa = true;
+                barreira[i].position = (Vector2){
+                    player.position.x + player.width / 2 - BARREIRA_TAMANHO / 2,
+                    player.position.y + player.height / 2 - BARREIRA_TAMANHO / 2
+                };
+                player.backpack.madeira--;
+                break;
+            }
+        }
+    }
+
+
+
+
     
 
 
@@ -514,6 +557,33 @@ void UpdateGame(void){
         float centralizarY = (bullet_atual->texture.height - newh) / 2.0f;
         
         Rectangle bulletRec = {bullet_atual->position.x +centralizarX, bullet_atual->position.y +centralizarY, neww , newh};
+
+        bool bloqueada = false;
+
+        for (int i = 0; i < MAX_BARREIRA; i++) {
+            if (barreira[i].ativa) {
+                Rectangle barreiraRec = {barreira[i].position.x, barreira[i].position.y, BARREIRA_TAMANHO, BARREIRA_TAMANHO};
+
+                if (CheckCollisionRecs(barreiraRec, bulletRec)) {
+                    // Bala atinge barreira -> barreira some, bala também
+                    barreira[i].ativa = false;
+                    bloqueada = true;
+                    break;
+                }
+            }
+        }
+
+        if (bloqueada) {
+            Bullet *bullet_morta = bullet_atual;
+            if (bullet_anterior == NULL){
+                bullet = bullet_atual->next;
+            } else{
+                bullet_anterior->next = bullet_atual->next;
+            }
+            bullet_atual = bullet_atual->next;
+            free(bullet_morta);
+            continue;
+        }
 
         // COLISÕES ENTRE PLAYER E BALAS
         if (CheckCollisionRecs(playerRec , bulletRec)){         // Condição para checagem de colisões entre as hitboxes.
@@ -617,7 +687,6 @@ void UpdateGame(void){
     }
 
     }
-
 
 }
 
