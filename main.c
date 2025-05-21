@@ -117,8 +117,6 @@ static float bullet_size = 40;
 
 //---Booleanos-------------------------------------------------
 static bool gameOver = false;
-static bool pause = false;
-static bool victory = false;
 static bool game_start = false;
 static bool pontuacao_salva = false;
 static bool leaderboard = false;
@@ -927,7 +925,6 @@ void printarLeaderboard(void){
         return;
     }
 
-    int linha = 0;
     int espacamento = 30;
 
     DrawText("RANKING", screenWidth / 2 - 100, 100, 40, DARKGRAY);
