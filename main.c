@@ -9,7 +9,7 @@
 #define MAX_CHAR_NOME 3
 #define ESCALA_HITBOX 0.65f
 #define MAX_BARREIRA 5
-#define BARREIRA_TAMANHO 70
+#define BARREIRA_TAMANHO 95
 
 
 
@@ -78,6 +78,7 @@ static Texture2D vida;
 static Texture2D homescreen;
 static Texture2D leaderboard_screen;
 static Texture2D bulletTexNorte, bulletTexSul, bulletTexLeste, bulletTexOeste;
+static Texture2D imgmadeira;
 // ------------------------------------------------------------
 
 // Inicializa musicas -----------------------------------------
@@ -170,6 +171,7 @@ void InitGame(void){
     ImageResize(&imgstart, screenWidth, screenHeight);
     homescreen = LoadTextureFromImage(imgstart);
     UnloadImage(imgstart);
+
     //--------------------------------------------------------------------------------------------------
     background = LoadTexture("assets/background.png");
     personagem = LoadTexture("assets/Unarmed_Idle_full.png");
@@ -201,6 +203,12 @@ void InitGame(void){
     ImageResize(&imgleaderboard, screenWidth, screenHeight);
     leaderboard_screen = LoadTextureFromImage(imgleaderboard);
     UnloadImage(imgleaderboard);
+
+
+    Image imgwood = LoadImage("assets/wood_barreira.png");
+    ImageResize(&imgwood, BARREIRA_TAMANHO, BARREIRA_TAMANHO);
+    imgmadeira = LoadTextureFromImage(imgwood);
+    UnloadImage(imgwood);
     // -------------------------------------------------------------------------------------------------
 
     // Carrega as musicas -----------------------------------------------------------------------------
@@ -259,7 +267,9 @@ void InitGame(void){
     }    
     // -------------------------------------------------------------------------------------------------
     for (int i = 0; i < MAX_BARREIRA; i++) {
-        barreira[i].ativa = false;
+        if (barreira[i].ativa){
+            barreira[i].ativa = false;
+        }
     }
 }
 
@@ -341,10 +351,9 @@ void DrawGame(void){
 
             for (int i = 0; i < MAX_BARREIRA; i++) {
                 if (barreira[i].ativa) {
-                    DrawRectangleV(barreira[i].position, (Vector2){BARREIRA_TAMANHO, BARREIRA_TAMANHO}, BROWN);
-                }       
+                    DrawTextureV(imgmadeira, barreira[i].position, WHITE);    
+                }
             }
-
 
             if (extralife.ativo){
                 DrawRectangleV(extralife.position , (Vector2){extralifeTamanho, extralifeTamanho} , RED);
@@ -697,6 +706,7 @@ void UnloadGame(void){
     UnloadTexture(personagem);
     UnloadTexture(homescreen);
     UnloadTexture(vida);
+    UnloadTexture(imgmadeira);
     UnloadMusicStream(homescreen_music);
     UnloadMusicStream(game_music);
 
