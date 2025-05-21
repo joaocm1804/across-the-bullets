@@ -58,6 +58,7 @@ typedef struct ExtraLife {
 typedef struct Barreira {
     Vector2 position;
     bool ativa;
+    float tempo_de_vida;
 } Barreira;
 
 
@@ -505,6 +506,7 @@ void UpdateGame(void){
                     player.position.x + player.width / 2 - BARREIRA_TAMANHO / 2,
                     player.position.y + player.height / 2 - BARREIRA_TAMANHO / 2
                 };
+                barreira[i].tempo_de_vida = 10.0f;
                 player.backpack.madeira--;
                 break;
             }
@@ -582,6 +584,16 @@ void UpdateGame(void){
                 }
             }
         }
+
+        for (int i = 0; i < MAX_BARREIRA; i++) {
+            if (barreira[i].ativa) {
+                barreira[i].tempo_de_vida -= deltaTime;
+                if (barreira[i].tempo_de_vida <= 0) {
+                    barreira[i].ativa = false;
+                }
+            }
+        }
+
 
         if (bloqueada) {
             Bullet *bullet_morta = bullet_atual;
