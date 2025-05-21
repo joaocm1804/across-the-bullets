@@ -117,8 +117,6 @@ static float bullet_size = 40;
 
 //---Booleanos-------------------------------------------------
 static bool gameOver = false;
-static bool pause = false;
-static bool victory = false;
 static bool game_start = false;
 static bool pontuacao_salva = false;
 static bool leaderboard = false;
@@ -129,6 +127,7 @@ static struct Bullet *bullet = NULL;
 User *ranking = NULL;
 static char nome_player[MAX_CHAR_NOME + 1 ] = {0};
 static int nome_len = 0;
+double colisaoTime = -10; 
 
 
 ExtraLife extralife = {0};
@@ -385,19 +384,33 @@ void DrawGame(void){
             }
         }
 
-        if (!gameOver) {
-            // DESENHA O PLAYER
-            Texture2D tex;
-            if (player.direction == 0){
-                tex = player.player_right[player.frame_atual];
-            } else if (player.direction == 1){
-                tex = player.player_left[player.frame_atual];
-            }else if (player.direction == 2){
-                tex = player.player_up[player.frame_atual];
-            } else {
-                tex = player.player_down[player.frame_atual];
+       if (!gameOver) {
+            double tempoAtual = GetTime();
+            Color playerColor = RED;
+
+            bool deveDesenhar = true;
+
+            if (tempoAtual - colisaoTime < 0.8) { // pisca por 0.8s após colisão
+                if (((int)(tempoAtual * 8)) % 2 == 0) {
+                    deveDesenhar = false; // neste frame, não desenha (dá efeito de piscar)
+                }
             }
-            DrawTexture(tex, (int)player.position.x, (int)player.position.y, WHITE);
+
+            if (deveDesenhar) {
+                // ESCOLHE TEXTURA DE ACORDO COM A DIREÇÃO
+                Texture2D tex;
+                if (player.direction == 0){
+                    tex = player.player_right[player.frame_atual];
+                } else if (player.direction == 1){
+                    tex = player.player_left[player.frame_atual];
+                } else if (player.direction == 2){
+                    tex = player.player_up[player.frame_atual];
+                } else {
+                    tex = player.player_down[player.frame_atual];
+                }
+
+                DrawTexture(tex, (int)player.position.x, (int)player.position.y, WHITE);
+            }
 
             // DESENHA AS BALAS
             Bullet *b = bullet;
@@ -710,6 +723,7 @@ void UpdateGame(void){
         if (CheckCollisionRecs(playerRec , bulletRec)){         // Condição para checagem de colisões entre as hitboxes.
             PlaySound(sound_atingiu);
             player.vida--;                                      // Para cada checagem verdadeira, a vida do player diminue
+            colisaoTime = GetTime();                            // Tempo em que ocorre a colisao
             Bullet *bullet_morta = bullet_atual;                // Cria um ponteiro temporario para armazenar balas que colidiram com o player
             if (bullet_anterior == NULL){                       // Caso a bala seja a primeira da lista, o ponteiro será redirecionado para a próxima da lista
                 bullet = bullet_atual->next;
@@ -911,7 +925,6 @@ void printarLeaderboard(void){
         return;
     }
 
-    int linha = 0;
     int espacamento = 30;
 
     DrawText("RANKING", screenWidth / 2 - 100, 100, 40, DARKGRAY);
