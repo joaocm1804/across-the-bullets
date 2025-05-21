@@ -30,14 +30,20 @@ typedef struct Inventario{
 
 typedef struct Player{
     Vector2 position;
-    Texture2D texture;
+    Inventario backpack;
     int vida;
     int speed;
-    Inventario backpack;
     int width;
     int height;
-    float resultado_tempo;
     bool colisao;
+
+    Texture2D player_right[6];
+    Texture2D player_left[6];
+    Texture2D player_up[4];
+    Texture2D player_down[6];
+    int frame_atual;
+    int direction;
+    float time_anime;
 } Player;
 
 
@@ -174,14 +180,13 @@ int main(void)
 void InitGame(void){
     // MIDIAS -----------------------------------------------------------------------------------------
     // Imagens ----------------------------------------------------------------------------------------
-    Image imgstart = LoadImage("assets/home_8bit.jpeg"); 
+    Image imgstart = LoadImage("assets/home-atheb.jpg"); 
     ImageResize(&imgstart, screenWidth, screenHeight);
     homescreen = LoadTextureFromImage(imgstart);
     UnloadImage(imgstart);
 
     //--------------------------------------------------------------------------------------------------
     background = LoadTexture("assets/background.png");
-    personagem = LoadTexture("assets/Unarmed_Idle_full.png");
     vida = LoadTexture("assets/vida.png");
 
     Image img;
@@ -242,13 +247,48 @@ void InitGame(void){
 
     // PLAYER ------------------------------------------------------------------------------------------
     // Variaveis do Player -----------------------------------------------------------------------------
-    player.width = 40;
-    player.height = 40; 
+    player.width = 60;
+    player.height = 60; 
     player.position = (Vector2){(screenWidth/2) - player.width/2, (screenHeight/2) - player.height/2};
     player.vida = 3;
     player.speed = 7;
     player.backpack.madeira = 5;
     // -------------------------------------------------------------------------------------------------
+    for (int i =0; i < 6; i++){
+        char caminho[44];
+        sprintf(caminho, "assets/player/right/playerdireita_%02d.png", i+1);
+        img = LoadImage(caminho);
+        ImageResize(&img, player.width+5, player.height+5);
+        player.player_right[i] = LoadTextureFromImage(img);
+        UnloadImage(img);
+    }
+
+    for (int i =0; i < 6; i++){
+        char caminho[45];
+        sprintf(caminho, "assets/player/left/player-esquerda_%02d.png", i+1);
+        img = LoadImage(caminho);
+        ImageResize(&img, player.width+5, player.height+5);
+        player.player_left[i] = LoadTextureFromImage(img);
+        UnloadImage(img);
+    }
+
+    for (int i =0; i < 4; i++){
+        char caminho[39];
+        sprintf(caminho, "assets/player/up/player-cima_%02d.png", i+1);
+        img = LoadImage(caminho);
+        ImageResize(&img, player.width+5, player.height+5);
+        player.player_up[i] = LoadTextureFromImage(img);
+        UnloadImage(img);
+    }
+
+    for (int i =0; i < 6; i++){
+        char caminho[42];
+        sprintf(caminho, "assets/player/down/player-baixo_%02d.png", i+1);
+        img = LoadImage(caminho);
+        ImageResize(&img, player.width+5, player.height+5);
+        player.player_down[i] = LoadTextureFromImage(img);
+        UnloadImage(img);
+    }
 
     // BALAS -------------------------------------------------------------------------------------------
     srand(time(NULL)); // balas aleatorias
@@ -347,7 +387,17 @@ void DrawGame(void){
 
         if (!gameOver) {
             // DESENHA O PLAYER
-            DrawRectangle(player.position.x, player.position.y, player.width, player.height, RED);
+            Texture2D tex;
+            if (player.direction == 0){
+                tex = player.player_right[player.frame_atual];
+            } else if (player.direction == 1){
+                tex = player.player_left[player.frame_atual];
+            }else if (player.direction == 2){
+                tex = player.player_up[player.frame_atual];
+            } else {
+                tex = player.player_down[player.frame_atual];
+            }
+            DrawTexture(tex, (int)player.position.x, (int)player.position.y, WHITE);
 
             // DESENHA AS BALAS
             Bullet *b = bullet;
@@ -547,11 +597,6 @@ void UpdateGame(void){
 
 
 
-
-    
-
-
-
     //inicialização do tempo para aumentar dificuldade
     float deltaTime = GetFrameTime();
     tempo_jogado += deltaTime;
@@ -559,17 +604,21 @@ void UpdateGame(void){
     
     
     //  movimentacao do jogador inclusive na diagonal
-    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)){
-        player.position.x -= player.speed;
-    }
     if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)){
         player.position.x += player.speed;
+        player.direction = 0;
+    }
+    if (IsKeyDown(KEY_A) || IsKeyDown(KEY_LEFT)){
+        player.position.x -= player.speed;
+        player.direction = 1;
     }
     if (IsKeyDown(KEY_W) || IsKeyDown(KEY_UP)){
         player.position.y -= player.speed;
+        player.direction = 2;
     }
     if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)){
         player.position.y += player.speed;
+        player.direction = 3;
     }
 
     // limitando a movimentação a tela
@@ -586,6 +635,24 @@ void UpdateGame(void){
         player.position.y = screenHeight - player.height;
     }
 
+    player.time_anime +=GetFrameTime();
+    if (player.time_anime >= 0.1f){
+        player.time_anime = 0;
+        player.frame_atual++;
+        int frame_max;
+        if (player.direction == 0){
+            frame_max = 6;
+        } else if (player.direction == 1){
+            frame_max = 6;
+        } else if (player.direction == 2){
+            frame_max = 4;
+        } else{
+            frame_max = 4;
+        }
+        if (player.frame_atual >= frame_max){
+            player.frame_atual = 0;
+        }
+    }
     Bullet *bullet_atual = bullet; //ponteiro para a principal
     Bullet *bullet_anterior = NULL; //ponteiro para a bala anterior
     Rectangle playerRec = {player.position.x, player.position.y, player.width, player.height};
