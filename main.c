@@ -11,6 +11,7 @@
 #define MAX_BARREIRA 5
 #define BARREIRA_TAMANHO 95
 #define VIDA_TAMANHO 55
+#define TAMANHO_MADEIRA 30
 
 
 
@@ -83,6 +84,7 @@ static Texture2D leaderboard_screen;
 static Texture2D bulletTexNorte, bulletTexSul, bulletTexLeste, bulletTexOeste;
 static Texture2D imgmadeira;
 static Texture2D imglifeextra;
+static Texture2D qtdmadeira;
 
 // ------------------------------------------------------------
 
@@ -219,6 +221,11 @@ void InitGame(void){
     ImageResize(&img , VIDA_TAMANHO , VIDA_TAMANHO);
     imglifeextra = LoadTextureFromImage(img);
     UnloadImage(img);
+
+    Image imgshield = LoadImage("assets/wood_shield.png");
+    ImageResize(&imgshield, TAMANHO_MADEIRA, TAMANHO_MADEIRA); // Redimensiona para um tamanho adequado
+    qtdmadeira = LoadTextureFromImage(imgshield);
+    UnloadImage(imgshield);
 
     // -------------------------------------------------------------------------------------------------
 
@@ -360,7 +367,7 @@ void DrawGame(void){
                 // DrawRectangleLinesEx(hitbox, 1, RED);//desenho para teste da hitbox
                 b = b->next;
                 }
-            DrawText(TextFormat("Madeira: %d", player.backpack.madeira), 10, 50, 20, DARKBROWN);
+                
 
             for (int i = 0; i < MAX_BARREIRA; i++) {
                 if (barreira[i].ativa) {
@@ -386,6 +393,16 @@ void DrawGame(void){
             coracaoX += tamanho_coracao + 10;
         }
 
+
+        int tamanho_madeira = 30;
+        int espacamento = 10;
+        int madeiraX = 10;
+        int madeiraY = 50;
+
+        for (int i = 0; i < player.backpack.madeira; i++) {
+            DrawTexture(qtdmadeira, madeiraX, madeiraY, WHITE);
+            madeiraX += tamanho_madeira + espacamento;
+        }
         // DESENHA O TEMPO DE JOGO
         int minutos = (int)tempo_jogado / 60;
         int segundos = (int)tempo_jogado % 60;
@@ -443,6 +460,9 @@ void reiniciar(void){
     player.position.y = screenHeight/2 - 20;
     extralife.ativo = false;
     extralife.tempo_dps_respawn = 0.0f;
+    for (int i = 0; i <MAX_BARREIRA;i++){
+        barreira[i].ativa = false;
+    }
 
 
     StopMusicStream(game_music);
@@ -737,6 +757,7 @@ void UnloadGame(void){
     UnloadTexture(personagem);
     UnloadTexture(homescreen);
     UnloadTexture(vida);
+    UnloadTexture(qtdmadeira);
     UnloadTexture(imgmadeira);
     UnloadTexture(imglifeextra);
     UnloadMusicStream(homescreen_music);
