@@ -10,6 +10,8 @@
 #define ESCALA_HITBOX 0.65f
 #define MAX_BARREIRA 5
 #define BARREIRA_TAMANHO 95
+#define VIDA_TAMANHO 55
+#define TAMANHO_MADEIRA 30
 
 
 
@@ -52,6 +54,7 @@ typedef struct ExtraLife {
     Vector2 position;
     bool ativo;
     float tempo_dps_respawn;
+    float tempo_ativo;
 } ExtraLife;
 
 
@@ -80,6 +83,9 @@ static Texture2D homescreen;
 static Texture2D leaderboard_screen;
 static Texture2D bulletTexNorte, bulletTexSul, bulletTexLeste, bulletTexOeste;
 static Texture2D imgmadeira;
+static Texture2D imglifeextra;
+static Texture2D qtdmadeira;
+
 // ------------------------------------------------------------
 
 // Inicializa musicas -----------------------------------------
@@ -121,7 +127,7 @@ static int nome_len = 0;
 
 ExtraLife extralife = {0};
 const float tempo_de_respawn = 10.0f;
-const int extralifeTamanho  = 20;
+const int extralifeTamanho  = 55;
 
 Barreira barreira[MAX_BARREIRA];
 
@@ -210,6 +216,17 @@ void InitGame(void){
     ImageResize(&imgwood, BARREIRA_TAMANHO, BARREIRA_TAMANHO);
     imgmadeira = LoadTextureFromImage(imgwood);
     UnloadImage(imgwood);
+
+    img = LoadImage("assets/healer.png");
+    ImageResize(&img , VIDA_TAMANHO , VIDA_TAMANHO);
+    imglifeextra = LoadTextureFromImage(img);
+    UnloadImage(img);
+
+    Image imgshield = LoadImage("assets/wood_shield.png");
+    ImageResize(&imgshield, TAMANHO_MADEIRA, TAMANHO_MADEIRA); // Redimensiona para um tamanho adequado
+    qtdmadeira = LoadTextureFromImage(imgshield);
+    UnloadImage(imgshield);
+
     // -------------------------------------------------------------------------------------------------
 
     // Carrega as musicas -----------------------------------------------------------------------------
@@ -218,6 +235,8 @@ void InitGame(void){
     PlayMusicStream(homescreen_music); // inicializa musica da home
     sound_atingiu = LoadSound("assets/audio/effects/explosion.wav");
     SetSoundVolume(sound_atingiu, 0.5f);
+
+
     // -------------------------------------------------------------------------------------------------
     // -------------------------------------------------------------------------------------------------
 
@@ -268,10 +287,10 @@ void InitGame(void){
     }    
     // -------------------------------------------------------------------------------------------------
     for (int i = 0; i < MAX_BARREIRA; i++) {
-        if (barreira[i].ativa){
-            barreira[i].ativa = false;
-        }
-    }
+        barreira[i].ativa = false;
+        barreira[i].tempo_de_vida = 0.0f;
+        barreira[i].position = (Vector2){0, 0};
+    }   
 }
 
 
@@ -348,7 +367,7 @@ void DrawGame(void){
                 // DrawRectangleLinesEx(hitbox, 1, RED);//desenho para teste da hitbox
                 b = b->next;
                 }
-            DrawText(TextFormat("Madeira: %d", player.backpack.madeira), 10, 50, 20, DARKBROWN);
+                
 
             for (int i = 0; i < MAX_BARREIRA; i++) {
                 if (barreira[i].ativa) {
@@ -357,7 +376,7 @@ void DrawGame(void){
             }
 
             if (extralife.ativo){
-                DrawRectangleV(extralife.position , (Vector2){extralifeTamanho, extralifeTamanho} , RED);
+                DrawTextureV(imglifeextra, extralife.position, WHITE);
             }
 
         }
@@ -374,6 +393,16 @@ void DrawGame(void){
             coracaoX += tamanho_coracao + 10;
         }
 
+
+        int tamanho_madeira = 30;
+        int espacamento = 10;
+        int madeiraX = 10;
+        int madeiraY = 50;
+
+        for (int i = 0; i < player.backpack.madeira; i++) {
+            DrawTexture(qtdmadeira, madeiraX, madeiraY, WHITE);
+            madeiraX += tamanho_madeira + espacamento;
+        }
         // DESENHA O TEMPO DE JOGO
         int minutos = (int)tempo_jogado / 60;
         int segundos = (int)tempo_jogado % 60;
@@ -431,6 +460,9 @@ void reiniciar(void){
     player.position.y = screenHeight/2 - 20;
     extralife.ativo = false;
     extralife.tempo_dps_respawn = 0.0f;
+    for (int i = 0; i <MAX_BARREIRA;i++){
+        barreira[i].ativa = false;
+    }
 
 
     StopMusicStream(game_music);
@@ -697,16 +729,23 @@ void UpdateGame(void){
         extralife.position.y = GetRandomValue(0, screenHeight - extralifeTamanho);
         extralife.ativo = true;
         extralife.tempo_dps_respawn = 0.0f;
+        extralife.tempo_ativo = 0.0f;
     }
 
     if (extralife.ativo){
+        extralife.tempo_ativo += deltaTime;
+
         Rectangle vida_extra = { extralife.position.x , extralife.position.y , extralifeTamanho , extralifeTamanho};
         if (CheckCollisionRecs(playerRec, vida_extra)){
-        if (player.vida < 3){
-            player.vida ++;
+            if (player.vida < 3){
+                player.vida ++;
+            }
+            extralife.ativo = false;
         }
-        extralife.ativo = false;
-    }
+
+        if (extralife.tempo_ativo >= 15.0f){
+            extralife.ativo = false;
+        }
 
     }
 
@@ -718,7 +757,9 @@ void UnloadGame(void){
     UnloadTexture(personagem);
     UnloadTexture(homescreen);
     UnloadTexture(vida);
+    UnloadTexture(qtdmadeira);
     UnloadTexture(imgmadeira);
+    UnloadTexture(imglifeextra);
     UnloadMusicStream(homescreen_music);
     UnloadMusicStream(game_music);
 
