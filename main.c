@@ -83,7 +83,6 @@ int frameCount = 0; // PISCAR
 
 // Inicializa texturas ----------------------------------------
 static Texture2D background;
-static Texture2D personagem;
 static Texture2D vida;
 static Texture2D homescreen;
 static Texture2D leaderboard_screen;
@@ -388,6 +387,22 @@ void DrawGame(void){
             DrawText(linha1, x1, posicaoYbase, tamanho_tex, BLACK);
             DrawText(linha2, x2, posicaoYbase + espacamento, tamanho_tex, BLACK);
         }
+        const int margem = 20;
+        const int tamanho_tex_2 = 20;
+        const char *cmd1 = "[L] - Leaderboard";
+        const char *cmd2 = "[G] - Como Jogar"; 
+
+        int textwidth3 = MeasureText(cmd1, tamanho_tex_2);
+        int textwitdh4 = MeasureText(cmd2, tamanho_tex_2);
+
+        int x3 = screenWidth - margem - textwidth3; // canto direito
+        int x4 = screenWidth - margem - textwitdh4;
+
+        int y2 = screenHeight - margem - tamanho_tex_2;  // linha de baixo
+        int y1 = y2 - tamanho_tex_2 - 5;                 // linha de cima
+
+        DrawText(cmd1, x3, y1, tamanho_tex_2, BLACK);
+        DrawText(cmd2, x4, y2, tamanho_tex_2, BLACK);
     // -------------------------------------------------------------------------------------------------     
     
     // GAME --------------------------------------------------------------------------------------------
@@ -884,14 +899,34 @@ void UpdateGame(void){
 
 void UnloadGame(void){
     UnloadTexture(background);
-    UnloadTexture(personagem);
     UnloadTexture(homescreen);
     UnloadTexture(vida);
     UnloadTexture(qtdmadeira);
     UnloadTexture(imgmadeira);
     UnloadTexture(imglifeextra);
+    UnloadTexture(bulletTexNorte);
+    UnloadTexture(bulletTexSul);
+    UnloadTexture(bulletTexLeste);
+    UnloadTexture(bulletTexOeste);
     UnloadMusicStream(homescreen_music);
     UnloadMusicStream(game_music);
+    UnloadMusicStream(gameover_music);
+    UnloadSound(sound_atingiu);
+    UnloadSound(sound_gameover);
+    UnloadSound(vida_sound);
+    UnloadSound(wall_quebrou);
+    UnloadSound(wall_construiu);
+
+    for (int i = 0; i < 6; i++)
+    {
+        UnloadTexture(player.player_right[i]);
+        UnloadTexture(player.player_left[i]);
+        UnloadTexture(player.player_down[i]);
+    }
+    for (int i = 0; i < 4; i++)
+    {
+        UnloadTexture(player.player_up[i]);
+    }
 
     Bullet *bala = bullet;
     while (bala != NULL){
