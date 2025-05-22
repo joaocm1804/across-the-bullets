@@ -404,7 +404,6 @@ void DrawGame(void){
 
        if (!gameOver) {
             double tempoAtual = GetTime();
-            Color playerColor = RED;
 
             bool deveDesenhar = true;
 
