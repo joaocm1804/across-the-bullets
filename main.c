@@ -97,14 +97,19 @@ static Texture2D qtdmadeira;
 // Inicializa musicas -----------------------------------------
 static Music homescreen_music;
 static Music game_music;
+static Music gameover_music;
 static Sound sound_atingiu;
+static Sound sound_gameover;
+static Sound vida_sound;
+static Sound wall_construiu;
+static Sound wall_quebrou;
 // ------------------------------------------------------------
 
 // Tempo ------------------------------------------------------
 static float tempo_jogado = 0.0f;
 static float cronometro_last_spawn = 0.0f; //quanto tempo passou desde a ultima bala disparada
 static float intervalo = 2.5f; //intervalo que as balas surgem
-static float intervalo_minimo = 0.3f; //não pode disparar mais rapido que isso
+static float intervalo_minimo = 0.25f; //não pode disparar mais rapido que isso
 static float qtd_diminuir_por_s = 0.1f; //rampa de dificulda (quanto maior, mais rapidamente fica dificil)
 
 // ------------------------------------------------------------
@@ -120,7 +125,11 @@ static bool gameOver = false;
 static bool game_start = false;
 static bool pontuacao_salva = false;
 static bool leaderboard = false;
-
+static bool gameover_music_init = false;
+static bool gameover_sound_init = false;
+static bool vida_sound_init = false;
+static bool wall_construiu_init = false;
+static bool wall_quebrou_init = false;
 //------------------------------------------------------------
 static Player player = { 0 };
 static struct Bullet *bullet = NULL;
@@ -236,9 +245,18 @@ void InitGame(void){
     // Carrega as musicas -----------------------------------------------------------------------------
     homescreen_music = LoadMusicStream("assets/audio/music/acrosstheuniverse.mp3");
     game_music = LoadMusicStream("assets/audio/music/paint_it_black.mp3");
+    gameover_music = LoadMusicStream("assets/audio/music/iylmn.mp3");
     PlayMusicStream(homescreen_music); // inicializa musica da home
     sound_atingiu = LoadSound("assets/audio/effects/explosion.wav");
+    sound_gameover = LoadSound("assets/audio/effects/synth.wav");
+    vida_sound = LoadSound("assets/audio/effects/powerUp.wav");
+    wall_construiu = LoadSound("assets/audio/effects/wall_construiu.wav");
+    wall_quebrou = LoadSound("assets/audio/effects/wall_quebrou.wav");
+    SetSoundVolume(sound_gameover, 0.4f);
     SetSoundVolume(sound_atingiu, 0.5f);
+    SetSoundVolume(vida_sound, 0.4f);
+    SetSoundVolume(wall_construiu, 0.4f);
+    SetSoundVolume(wall_quebrou, 0.4f);
 
 
     // -------------------------------------------------------------------------------------------------
@@ -522,13 +540,15 @@ void reiniciar(void){
     player.position.x = screenWidth/2 - 20; 
     player.position.y = screenHeight/2 - 20;
     extralife.ativo = false;
+    gameover_music_init = false;
+    gameover_sound_init = false;
     extralife.tempo_dps_respawn = 0.0f;
     for (int i = 0; i <MAX_BARREIRA;i++){
         barreira[i].ativa = false;
     }
 
 
-    StopMusicStream(game_music);
+    StopMusicStream(gameover_music);
     PlayMusicStream(homescreen_music);
 
     
@@ -550,16 +570,26 @@ void UpdateGame(void){
             game_start= true;
             StopMusicStream(homescreen_music);
             PlayMusicStream(game_music);
-            SetMusicVolume(game_music, 0.1f);
+            SetMusicVolume(game_music, 0.5f);
             }
         }
         return;
     }
 
     UpdateMusicStream(game_music);
-
     // Algoritimo para definição do ranking de players
     if (gameOver == true){
+        StopMusicStream(game_music);
+
+        if (gameover_music_init == false){
+            PlaySound(sound_gameover);
+            PlayMusicStream(gameover_music);
+            SetMusicVolume(gameover_music, 0.7f);
+            gameover_music_init = true;
+
+        }
+
+        UpdateMusicStream(gameover_music);
         int tecla = GetKeyPressed();
         if (tecla>0 && pontuacao_salva == false){                      
             if (tecla == KEY_BACKSPACE){                                // Condição para remoção de caracteres pelo backspace 
@@ -596,6 +626,11 @@ void UpdateGame(void){
     if (IsKeyPressed(KEY_SPACE) && player.backpack.madeira > 0){
         for (int i = 0; i < MAX_BARREIRA; i++) {
             if (!barreira[i].ativa) {
+                wall_construiu_init = true;
+                if (wall_construiu_init){
+                    PlaySound(wall_construiu);
+                    wall_construiu_init = false;
+                }
                 barreira[i].ativa = true;
                 barreira[i].position = (Vector2){
                     player.position.x + player.width / 2 - BARREIRA_TAMANHO / 2,
@@ -689,6 +724,11 @@ void UpdateGame(void){
                 Rectangle barreiraRec = {barreira[i].position.x, barreira[i].position.y, BARREIRA_TAMANHO, BARREIRA_TAMANHO};
 
                 if (CheckCollisionRecs(barreiraRec, bulletRec)) {
+                    wall_quebrou_init = true;
+                    if (wall_quebrou_init){
+                        PlaySound(wall_quebrou);
+                        wall_quebrou_init = false;
+                    }
                     // Bala atinge barreira -> barreira some, bala também
                     barreira[i].ativa = false;
                     bloqueada = true;
@@ -701,6 +741,11 @@ void UpdateGame(void){
             if (barreira[i].ativa) {
                 barreira[i].tempo_de_vida -= deltaTime;
                 if (barreira[i].tempo_de_vida <= 0) {
+                    wall_quebrou_init = true;
+                    if (wall_quebrou_init){
+                        PlaySound(wall_quebrou);
+                        wall_quebrou_init = false;
+                    }
                     barreira[i].ativa = false;
                 }
             }
@@ -818,6 +863,11 @@ void UpdateGame(void){
 
         Rectangle vida_extra = { extralife.position.x , extralife.position.y , extralifeTamanho , extralifeTamanho};
         if (CheckCollisionRecs(playerRec, vida_extra)){
+            vida_sound_init = true;
+            if (vida_sound_init){
+                PlaySound(vida_sound);
+                vida_sound_init = false;
+            }
             if (player.vida < 3){
                 player.vida ++;
             }
