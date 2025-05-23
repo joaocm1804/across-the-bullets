@@ -108,14 +108,14 @@ static Sound wall_quebrou;
 static float tempo_jogado = 0.0f;
 static float cronometro_last_spawn = 0.0f; //quanto tempo passou desde a ultima bala disparada
 static float intervalo = 2.5f; //intervalo que as balas surgem
-static float intervalo_minimo = 0.25f; //não pode disparar mais rapido que isso
-static float qtd_diminuir_por_s = 0.1f; //rampa de dificulda (quanto maior, mais rapidamente fica dificil)
+static float intervalo_minimo = 0.32f; //não pode disparar mais rapido que isso
+static float qtd_diminuir_por_s = 0.21f; //rampa de dificulda (quanto maior, mais rapidamente fica dificil)
 
 // ------------------------------------------------------------
 
 //---Balas-----------------------------------------------------
-static float bullet_speed = 300.0f;
-static float bullet_speed_increase = 10.0f; //incremento de velocidade
+static float bullet_speed = 380.0f;
+static float bullet_speed_increase = 5.5f; //incremento de velocidade
 static float bullet_size = 40;
 // ------------------------------------------------------------
 
@@ -913,7 +913,7 @@ void UpdateGame(void){
             extralife.ativo = false;
         }
 
-        if (extralife.tempo_ativo >= 15.0f){
+        if (extralife.tempo_ativo >= 6.0f){
             extralife.ativo = false;
         }
 
