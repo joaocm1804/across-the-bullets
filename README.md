@@ -7,34 +7,35 @@
 <details>
 <summary><strong>Instruções de instalação</strong></summary>
 
-### Instalar Raylib:
-    Linux:
+### Instalar Raylib
+Linux:
 
-        1. sudo apt install build-essential git
+    1. sudo apt install build-essential git
     
 
-    Ubuntu:
+Ubuntu:
 
-        1. sudo apt install libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev libwayland-dev libxkbcommon-dev
+    1. sudo apt install libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev libwayland-dev libxkbcommon-dev
     
 
-    Fedora: 
+Fedora: 
 
-        1. sudo dnf install alsa-lib-devel mesa-libGL-devel libX11-devel libXrandr-devel libXi-devel libXcursor-devel libXinerama-devel libatomic
+    1. sudo dnf install alsa-lib-devel mesa-libGL-devel libX11-devel libXrandr-devel libXi-devel libXcursor-devel libXinerama-devel libatomic
 
 
-    MacOS:
+MacOS:
 
-        1. brew install raylib
-        
+    1. brew install raylib
 
-### Comando para compilação e funcionamento do código:
+
+### Comando para compilação e funcionamento do código
     
-    Execute esse comando no terminal:
-        1. make run
+Execute esse comando no terminal:
+    1. make run
     
-    Caso ao executar o jogo der erro de permissão, execute: 
-        1. chmod +x main
+    
+Caso ao executar o jogo der erro de permissão, execute: 
+    1. chmod +x main
 
 </details>
 
