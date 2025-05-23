@@ -4,9 +4,15 @@ Across the bullets não é somente um jogo, é uma experiência. Foi nessa linha
 
 
 <details>
-<summary><strong>Como Funciona</strong></summary>
+
+
+
+<summary><h2>Como Funciona</h2></summary>
+
+
 
 <strong>Informações gerais: </strong>
+
 
 - O jogo consiste em sobreviver pelo maior tempo possível.
 
@@ -17,7 +23,10 @@ Across the bullets não é somente um jogo, é uma experiência. Foi nessa linha
 
 
 
+
 <strong>Informações Necessárias: </strong>
+
+
 
 - O jogador contém *3 vidas* , que serão consumidas a cada colisão com a bala.
 
@@ -43,7 +52,10 @@ Across the bullets não é somente um jogo, é uma experiência. Foi nessa linha
 
 
 <details>
-<summary><strong>Instruções de instalação</strong></summary>
+<summary><h2>Instruções de instalação</h2></summary>
+
+
+
 
 ### Instalar Raylib
 Linux:
