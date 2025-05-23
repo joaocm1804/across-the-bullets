@@ -625,11 +625,14 @@ void UpdateGame(void){
             PlayMusicStream(gameover_music);
             SetMusicVolume(gameover_music, 0.7f);
             gameover_music_init = true;
-
+            
         }
 
         UpdateMusicStream(gameover_music);
         int tecla = GetKeyPressed();
+        if (IsKeyDown(KEY_ZERO) && IsKeyDown(KEY_ONE)){
+                reiniciar();
+            }
         if (tecla>0 && pontuacao_salva == false){                      
             if (tecla == KEY_BACKSPACE){                                // Condição para remoção de caracteres pelo backspace 
                 if (nome_len > 0){                                  
