@@ -90,7 +90,7 @@ static Texture2D bulletTexNorte, bulletTexSul, bulletTexLeste, bulletTexOeste;
 static Texture2D imgmadeira;
 static Texture2D imglifeextra;
 static Texture2D qtdmadeira;
-
+static Texture2D tela_instrucoes;
 // ------------------------------------------------------------
 
 // Inicializa musicas -----------------------------------------
@@ -124,6 +124,7 @@ static bool gameOver = false;
 static bool game_start = false;
 static bool pontuacao_salva = false;
 static bool leaderboard = false;
+static bool instrucoes = false;
 static bool gameover_music_init = false;
 static bool gameover_sound_init = false;
 static bool vida_sound_init = false;
@@ -191,6 +192,11 @@ void InitGame(void){
     ImageResize(&imgstart, screenWidth, screenHeight);
     homescreen = LoadTextureFromImage(imgstart);
     UnloadImage(imgstart);
+
+    Image img_instruct = LoadImage("assets/tela-instrucoes.jpg"); 
+    ImageResize(&img_instruct, screenWidth, screenHeight);
+    tela_instrucoes = LoadTextureFromImage(img_instruct);
+    UnloadImage(img_instruct);
 
     //--------------------------------------------------------------------------------------------------
     background = LoadTexture("assets/background.png");
@@ -357,8 +363,20 @@ void DrawGame(void){
         ClearBackground(RAYWHITE);
         DrawTexture(leaderboard_screen, 0, 0, WHITE);
         printarLeaderboard();
+        
     // -------------------------------------------------------------------------------------------------   
 
+    }else if (instrucoes == true){
+        static int frameCount = 0;
+        ClearBackground(RAYWHITE);
+        DrawTexture(tela_instrucoes, 0, 0, WHITE);
+        const char *mensagem2 = "Pressione [ENTER] para voltar ao menu";
+        int fontSize2 = 20;
+        int LarguraTexto2 = MeasureText(mensagem2, fontSize2);
+        frameCount++;
+        if ((frameCount / 30) % 2 == 0){
+            DrawText(mensagem2, screenWidth / 2 - LarguraTexto2 / 2, screenHeight - 100, fontSize2, WHITE);
+        }
     // HOME --------------------------------------------------------------------------------------------
     }else if (game_start == false){
         ClearBackground(RAYWHITE);
@@ -576,11 +594,18 @@ void UpdateGame(void){
         UpdateMusicStream(homescreen_music);
         if (IsKeyPressed(KEY_L)){
             leaderboard = true;
+            instrucoes = false;
+        }if (IsKeyPressed(KEY_G)){
+            instrucoes = true;
+            leaderboard = false;
         }
-        else if (IsKeyPressed(KEY_ENTER)){
+        if (IsKeyPressed(KEY_ENTER)){
             if (leaderboard ==true){
                 leaderboard = false;
-            }else{
+            } else if(instrucoes == true){
+                instrucoes = false;
+            }
+            else{
             game_start= true;
             StopMusicStream(homescreen_music);
             PlayMusicStream(game_music);
