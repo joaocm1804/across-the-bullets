@@ -371,7 +371,7 @@ void DrawGame(void){
         ClearBackground(RAYWHITE);
         DrawTexture(tela_instrucoes, 0, 0, WHITE);
         const char *mensagem2 = "Pressione [ENTER] para voltar ao menu";
-        int fontSize2 = 20;
+        int fontSize2 = 25;
         int LarguraTexto2 = MeasureText(mensagem2, fontSize2);
         frameCount++;
         if ((frameCount / 30) % 2 == 0){
@@ -466,25 +466,13 @@ void DrawGame(void){
             Bullet *b = bullet;
                 while (b !=NULL){
                 DrawTextureV(b->texture, b->position, RAYWHITE);
-
-                // //codigo para verificar tamanho da hitbox
-                // float neww = b->texture.width  * ESCALA_HITBOX;
-                // float newh = b->texture.height * ESCALA_HITBOX;
-                // // //variaveis pra centralizar a bala na hitbox
-                // float centralizarX = (b->texture.width  - neww) * 0.5f;
-                // float centralizarY = (b->texture.height - newh) * 0.5f;
-
-                // Rectangle hitbox = {b->position.x + centralizarX, b->position.y + centralizarY, neww,newh};
-
-                
-                // DrawRectangleLinesEx(hitbox, 1, RED);//desenho para teste da hitbox
                 b = b->next;
                 }
                 
 
             for (int i = 0; i < MAX_BARREIRA; i++) {
                 if (barreira[i].ativa) {
-                    DrawTextureV(imgmadeira, barreira[i].position, WHITE);    
+                    DrawTextureV(imgmadeira, barreira[i].position, WHITE);
                 }
             }
 
@@ -524,23 +512,30 @@ void DrawGame(void){
         // DrawText(TextFormat("%0.02f", (float)tempo_jogado/60), screenWidth - screenWidth/18 , 10, 30 , BLACK);
         
         if (gameOver) {
-           const char* go = "GAME OVER";
-            int size = 60;
-            int w = MeasureText(go, size);
-            int x = (screenWidth - w)/2;
-            int y = screenHeight/2 - size/2;
+            const char* go = "GAME OVER";
+            int size = 80;
+            int width_go = MeasureText(go, size);
+            int x = (screenWidth - width_go)/2;
+            int y = screenHeight/2 - size/2 - 40;
             DrawText(go, x, y, size, RED);
 
-            // b) Se ainda não salvou, peça o nome
+            const char* dsn = "Digite seu nome:";
+            int width_dsn = MeasureText(dsn, 25);
+
+
             if (!pontuacao_salva) {
-                DrawText("Digite seu nome:", x, y + 80, 20, BLACK);
-                DrawText(nome_player, x, y + 110, 30, BLACK);
+                DrawText(dsn, x, y + 90, 25, BLACK);
+                DrawText(nome_player, x + width_dsn + 15, y + 90, 30, BLACK);
             }
-            // c) Se já salvou, oriente para ENTER voltar
-            else {
-                DrawText("Salvo! Pressione [ENTER] para voltar ao menu", 
-                         x - 50, y + 80, 20, DARKGREEN);
-            }
+
+            const char *mensagem_coloque = "Digite 3 caracteres para o nome e";
+            const char *mensagem_pressione = "Pressione [ENTER] para voltar ao menu";
+            int fontSize = 20;
+            int larguraTexto = MeasureText(mensagem_pressione, fontSize);
+            int larguraTexto2 = MeasureText(mensagem_coloque, fontSize);
+
+            DrawText(mensagem_coloque, screenWidth / 2 - larguraTexto2 / 2, screenHeight - 130, fontSize, BLACK);
+            DrawText(mensagem_pressione, screenWidth / 2 - larguraTexto / 2, screenHeight - 100, fontSize, BLACK);
 
         }
     }
@@ -763,9 +758,12 @@ void UpdateGame(void){
 
         for (int i = 0; i < MAX_BARREIRA; i++) {
             if (barreira[i].ativa) {
-                Rectangle barreiraRec = {barreira[i].position.x, barreira[i].position.y, BARREIRA_TAMANHO, BARREIRA_TAMANHO};
+                float centro_x = barreira[i].position.x + BARREIRA_TAMANHO/2;
+                float centro_y = barreira[i].position.y + BARREIRA_TAMANHO/2;
+                float raio = BARREIRA_TAMANHO/2;
+                Vector2 centro_barreira = {centro_x, centro_y};
 
-                if (CheckCollisionRecs(barreiraRec, bulletRec)) {
+                if (CheckCollisionCircleRec(centro_barreira, raio, bulletRec)) {
                     wall_quebrou_init = true;
                     if (wall_quebrou_init){
                         PlaySound(wall_quebrou);
