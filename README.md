@@ -1,12 +1,24 @@
 # Across the bullets
 
-Across the bullets não é somente um jogo, é uma experiência. Foi nessa linha de reflexão que desenvolvemos um survival game interativo, com uma trilha sonóra fantástica,elementos visuais bem definidos e uma rica gama de efeitos sonoros , em que você , jogador, será posto na linha de frente em uma terra desconhecida aparente serena , porém imersa no caos de um fogo cruzado sem fim! Sobreviva o máximo que puder! Construa barricadas em busca de uma mísera esperança de vida, colete porções para ganhar mais tempo. Surpreenda seus amigos provando que você consegue sobreviver Across The Bullets *o maior tempo possível!*
+Across the bullets não é somente um jogo, é uma experiência. Foi nessa linha de reflexão que desenvolvemos um survival game interativo, com uma trilha sonóra fantástica,elementos visuais bem definidos e uma rica gama de efeitos sonoros , em que você , jogador, será posto na linha de frente em uma terra desconhecida aparente serena , porém imersa no caos de um fogo cruzado sem fim! Sobreviva o máximo que puder! Construa barricadas em busca de uma mísera esperança de vida, colete porções para ganhar mais tempo. Surpreenda seus amigos provando que você consegue sobreviver Across The Bullets <strong>o maior tempo possível!</strong>
 
 
 <details>
+<summary><h2>Equipe</h2></summary>
+
+
+* [Amanda Luz Chaves](https://github.com/amandaaluzc) - alc2@cesar.school  
+* [Lucas Menezes Santana](https://github.com/ucasmenezes08) - lms4@cesar.school  
+* [João Carlos Melo Brennand de Souza Mendes](https://github.com/joaocm1804) - jcmbsm@cesar.school  
+
+</details>
 
 
 
+
+
+
+<details>
 <summary><h2>Como Funciona</h2></summary>
 
 
@@ -51,6 +63,7 @@ Across the bullets não é somente um jogo, é uma experiência. Foi nessa linha
 
 
 
+
 <details>
 <summary><h2>Instruções de instalação</h2></summary>
 
@@ -88,6 +101,17 @@ Execute esse comando no terminal:
 Caso ao executar o jogo der erro de permissão, execute: 
     
     1. chmod +x main
+
+</details>
+
+
+
+
+<details>
+<summary><h2>Detalhes de implementação</h2></summary>
+
+
+
 
 </details>
 
