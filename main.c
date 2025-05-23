@@ -630,7 +630,7 @@ void UpdateGame(void){
 
         UpdateMusicStream(gameover_music);
         int tecla = GetKeyPressed();
-        if (tecla == KEY_ZERO){
+        if (IsKeyDown(KEY_ZERO) && IsKeyDown(KEY_ONE)){
                 reiniciar();
             }
         if (tecla>0 && pontuacao_salva == false){                      
