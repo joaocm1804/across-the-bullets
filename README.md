@@ -73,15 +73,21 @@ Across the bullets não é somente um jogo, é uma experiência. Foi nessa linha
 ### Instalar Raylib
 Linux:
 
+1 - instalar recursos básicos:
+
     sudo apt install build-essential git
+
+2 - comando para instalar raylib (se não funcionar, seguir para o próximo passo):
+
+    sudo apt install libraylib-dev
     
 
-Ubuntu:
+3a - se for Ubuntu:
 
     sudo apt install libasound2-dev libx11-dev libxrandr-dev libxi-dev libgl1-mesa-dev libglu1-mesa-dev libxcursor-dev libxinerama-dev libwayland-dev libxkbcommon-dev
     
 
-Fedora: 
+3b - mas se for Fedora: 
 
     sudo dnf install alsa-lib-devel mesa-libGL-devel libX11-devel libXrandr-devel libXi-devel libXcursor-devel libXinerama-devel libatomic
 
