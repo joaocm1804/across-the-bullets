@@ -2,6 +2,7 @@
 
 Across the bullets não é somente um jogo, é uma experiência. Foi nessa linha de reflexão que desenvolvemos um survival game interativo, com uma trilha sonora fantástica, elementos visuais bem definidos e uma rica gama de efeitos sonoros, em que você, jogador, será posto na linha de frente em uma terra desconhecida, aparentemente serena, porém, imersa no caos de um fogo cruzado sem fim! Sobreviva o máximo que puder! Construa barricadas em busca de uma mísera esperança de vida, colete porções para ganhar mais tempo. Surpreenda seus amigos provando que você consegue sobreviver em Across The Bullets <strong>o maior tempo possível!</strong>
 
+<strong>vídeo de demonstração:</strong> https://youtu.be/2xZk1Udh0VY 
 
 <details>
 <summary><h2>Equipe</h2></summary>
