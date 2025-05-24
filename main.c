@@ -604,7 +604,7 @@ void UpdateGame(void){
             game_start= true;
             StopMusicStream(homescreen_music);
             PlayMusicStream(game_music);
-            SetMusicVolume(game_music, 0.5f);
+            SetMusicVolume(game_music, 0.25f);
             }
         }
         return;
@@ -618,7 +618,7 @@ void UpdateGame(void){
         if (gameover_music_init == false){
             PlaySound(sound_gameover);
             PlayMusicStream(gameover_music);
-            SetMusicVolume(gameover_music, 0.7f);
+            SetMusicVolume(gameover_music, 0.3f);
             gameover_music_init = true;
             
         }
