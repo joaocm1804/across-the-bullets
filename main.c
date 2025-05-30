@@ -131,13 +131,13 @@ static Sound wall_quebrou;
 static float tempo_jogado = 0.0f;
 static float cronometro_last_spawn = 0.0f; //quanto tempo passou desde a ultima bala disparada
 static float intervalo = 2.5f; //intervalo que as balas surgem
-static float intervalo_minimo = 0.32f; //não pode disparar mais rapido que isso
+static float intervalo_minimo = 0.27f; // 0.32 //não pode disparar mais rapido que isso
 static float qtd_diminuir_por_s = 0.21f; //rampa de dificulda (quanto maior, mais rapidamente fica dificil)
 
 // ------------------------------------------------------------
 
 //---Balas-----------------------------------------------------
-static float bullet_speed = 380.0f;
+static float bullet_speed = 400.0f; //380.0
 static float bullet_speed_increase = 5.5f; //incremento de velocidade
 static float bullet_speed_original;
 // ------------------------------------------------------------
