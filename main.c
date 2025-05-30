@@ -609,6 +609,8 @@ void reiniciar(void){
     intervalo = 2.5f;
     player.vida = 3;
     player.backpack.madeira = 5;
+    player.speed = 9;
+    player.speed_original = 9;
     nome_len = 0;
     nome_player[0] = '\0';
     gameOver=false;
