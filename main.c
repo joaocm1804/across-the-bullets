@@ -86,6 +86,14 @@ typedef struct Chest{
 } Chest;
 
 
+
+typedef struct Lama {
+    Vector2 position;
+    bool ativo;
+    float tempo_ativo;
+    float tempo_dps_respawn;
+}Lama;
+
 typedef struct Barreira {
     Vector2 position;
     bool ativa;
@@ -114,6 +122,7 @@ static Texture2D imglifeextra;
 static Texture2D qtdmadeira;
 static Texture2D tela_instrucoes;
 static Texture2D chest_img;
+static Texture2D lama_img;
 // ------------------------------------------------------------
 
 // Inicializa musicas -----------------------------------------
@@ -170,6 +179,17 @@ const int extralifeTamanho  = 55;
 
 Barreira barreira[MAX_BARREIRA];
 
+Lama lama = {0};
+const float tempo_de_respawn_lama = 12.0f;
+const float tempo_de_vida_lama = 12.0f; 
+const float player_speed_lama = 3.5f;
+
+
+
+
+
+
+
 //---FUNCOES PRINCIPAIS----------------------------------------
 static void InitGame(void);         // Initialize game
 static void UpdateGame(void);       // Update game (one frame)
@@ -204,6 +224,7 @@ int main(void)
     #define TAMANHO_MADEIRA (int)(30  * sMin)
     #define BULLET_SIZE (int)(60*sMin)
     #define CHEST_SIZE (int)(50*sMin)
+    #define LAMA_SIZE (int)(250*sMin)
     
 
 
@@ -285,6 +306,13 @@ void InitGame(void){
     chest_img = LoadTextureFromImage(img);
     UnloadImage(img);
 
+
+    img = LoadImage("assets/lama.png");
+    ImageResize(&img , LAMA_SIZE , LAMA_SIZE);
+    lama_img = LoadTextureFromImage(img);
+    UnloadImage(img);
+
+
     Image imgshield = LoadImage("assets/wood_shield.png");
     ImageResize(&imgshield, TAMANHO_MADEIRA, TAMANHO_MADEIRA); // Redimensiona para um tamanho adequado
     qtdmadeira = LoadTextureFromImage(imgshield);
@@ -320,6 +348,7 @@ void InitGame(void){
     player.vida = 3;
     player.speed = 9;
     player.backpack.madeira = 5;
+    player.speed_original = 9;
     // -------------------------------------------------------------------------------------------------
     for (int i =0; i < 6; i++){
         char caminho[44];
@@ -530,6 +559,10 @@ void DrawGame(void){
                 DrawTextureV(chest_img, chest.position, WHITE);
             }
 
+            if (lama.ativo){
+                DrawTextureV(lama_img,lama.position,WHITE);
+            }
+
         }
 
 
@@ -621,6 +654,7 @@ void reiniciar(void){
     extralife.ativo = false;
     chest.status_efeito = false;
     chest.ativo = false;
+    lama.ativo = false;
     gameover_music_init = false;
     gameover_sound_init = false;
     extralife.tempo_dps_respawn = 0.0f;
@@ -976,57 +1010,94 @@ void UpdateGame(void){
 
     }
 
+      
     chest.tempo_dps_respawn += deltaTime;
-
-    if (!chest.ativo && chest.tempo_dps_respawn >= tempo_de_respawn_chest){
-        chest.tempo_dps_respawn += deltaTime;
-        chest.position.x = GetRandomValue(0 , screenWidth - CHEST_SIZE);
+    if (!chest.ativo && chest.tempo_dps_respawn >= tempo_de_respawn_chest) {
+        chest.position.x = GetRandomValue(0, screenWidth - CHEST_SIZE);
         chest.position.y = GetRandomValue(0, screenHeight - CHEST_SIZE);
         chest.ativo = true;
         chest.tempo_dps_respawn = 0.0f;
         chest.tempo_ativo = 0.0f;
     }
 
-    if (chest.ativo){
+ 
+    if (chest.ativo) {
         chest.tempo_ativo += deltaTime;
+        Rectangle chest_rec = { chest.position.x, chest.position.y, CHEST_SIZE, CHEST_SIZE };
 
-        Rectangle chest_rec = { chest.position.x , chest.position.y , CHEST_SIZE , CHEST_SIZE};
-        if (CheckCollisionRecs(playerRec, chest_rec)){
-            chest.ativo = false;
+        if (CheckCollisionRecs(playerRec, chest_rec)) {
+            chest.ativo = false; 
             chest.item = GetRandomValue(0, 1);
-            if (chest.item == 0){
-                player.speed_original = player.speed;
-            } else if (chest.item == 1){
-                bullet_speed_original = bullet_speed;
+
+            if (chest.item == 1) { 
+                bullet_speed_original = bullet_speed; 
             }
             
-            chest.status_efeito = true;
-            chest.tempo_decorrido_efeito = 0.0f;
+            chest.status_efeito = true; 
+            chest.tempo_decorrido_efeito = 0.0f; 
+        } else if (chest.tempo_ativo >= 15.0f) { 
+            chest.ativo = false; 
         }
-
-        if (chest.tempo_ativo >= 15.0f){
-            chest.ativo = false;
-        }
-
     }
 
-    if (chest.status_efeito){
+    if (chest.status_efeito) {
         chest.tempo_decorrido_efeito += deltaTime;
-        if (chest.item == 0){
-             player.speed = 20;
-        }else if (chest.item == 1){
-            bullet_speed = 20.0f;
+
+
+        if (chest.item == 1) { 
+            bullet_speed = 20.0f; 
         }
-        if (chest.tempo_decorrido_efeito >= 10.0f){
-            if (chest.item == 0){
-                player.speed = player.speed_original;
-            }else if (chest.item == 1){
+
+        if (chest.tempo_decorrido_efeito >= 10.0f) { 
+            if (chest.item == 1) { 
                 bullet_speed = bullet_speed_original;
             }
-            chest.status_efeito = false;
+            chest.status_efeito = false; 
         }
-
     }
+
+
+     float velocidadeAlvoEsteQuadro; 
+
+  
+    if (chest.status_efeito && chest.item == 0) { 
+        velocidadeAlvoEsteQuadro = 20.0f;
+    } else {
+        velocidadeAlvoEsteQuadro = (float)player.speed_original; 
+    }
+
+    if (!lama.ativo && lama.tempo_dps_respawn >= tempo_de_respawn_lama) {
+        lama.position.x = GetRandomValue(0, screenWidth - LAMA_SIZE);
+        lama.position.y = GetRandomValue(0, screenHeight - LAMA_SIZE);
+        lama.ativo = true;
+        lama.tempo_dps_respawn = 0.0f; 
+        lama.tempo_ativo = 0.0f;       
+    } else if (!lama.ativo) { 
+        lama.tempo_dps_respawn += deltaTime;
+    }
+
+ 
+    if (lama.ativo) {
+        lama.tempo_ativo += deltaTime;
+        if (lama.tempo_ativo >= tempo_de_vida_lama) {
+            lama.ativo = false; 
+        }
+    }
+
+   
+    if (lama.ativo) { 
+        Rectangle lama_rec = { lama.position.x, lama.position.y, LAMA_SIZE * ESCALA_HITBOX, LAMA_SIZE * ESCALA_HITBOX};
+        if (CheckCollisionRecs(playerRec, lama_rec)) {
+            player.speed = (int)player_speed_lama; 
+        } else {
+            player.speed = (int)velocidadeAlvoEsteQuadro; 
+        }
+    } else { 
+        player.speed = (int)velocidadeAlvoEsteQuadro; 
+    }
+
+
+
 
 }
 
@@ -1042,6 +1113,7 @@ void UnloadGame(void){
     UnloadTexture(bulletTexSul);
     UnloadTexture(bulletTexLeste);
     UnloadTexture(bulletTexOeste);
+    UnloadTexture(lama_img);
     UnloadMusicStream(homescreen_music);
     UnloadMusicStream(game_music);
     UnloadMusicStream(gameover_music);
