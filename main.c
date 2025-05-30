@@ -15,10 +15,7 @@ static float sX, sY, sMin;
 #define MAX_CHAR_NOME 3
 #define ESCALA_HITBOX 0.65f
 #define MAX_BARREIRA 5
-#define BARREIRA_TAMANHO
-#define VIDA_TAMANHO
-#define TAMANHO_MADEIRA
-#define BULLET_SIZE
+
 
 // ----- Fatores de escala calculados em runtime -----------------
 static float sX;   // escala em X  (largura)
@@ -49,6 +46,7 @@ typedef struct Player{
     int width;
     int height;
     bool colisao;
+    int speed_original;
 
     Texture2D player_right[6];
     Texture2D player_left[6];
@@ -75,6 +73,17 @@ typedef struct ExtraLife {
     float tempo_dps_respawn;
     float tempo_ativo;
 } ExtraLife;
+
+typedef struct Chest{
+    Vector2 position;
+    bool ativo;
+    float tempo_ativo;
+    float tempo_dps_respawn;
+    int item;
+    int status_poder;
+    bool status_efeito;
+    float tempo_decorrido_efeito;
+} Chest;
 
 
 typedef struct Barreira {
@@ -104,6 +113,7 @@ static Texture2D imgmadeira;
 static Texture2D imglifeextra;
 static Texture2D qtdmadeira;
 static Texture2D tela_instrucoes;
+static Texture2D chest_img;
 // ------------------------------------------------------------
 
 // Inicializa musicas -----------------------------------------
@@ -129,6 +139,7 @@ static float qtd_diminuir_por_s = 0.21f; //rampa de dificulda (quanto maior, mai
 //---Balas-----------------------------------------------------
 static float bullet_speed = 380.0f;
 static float bullet_speed_increase = 5.5f; //incremento de velocidade
+static float bullet_speed_original;
 // ------------------------------------------------------------
 
 //---Booleanos-------------------------------------------------
@@ -142,7 +153,6 @@ static bool gameover_sound_init = false;
 static bool vida_sound_init = false;
 static bool wall_construiu_init = false;
 static bool wall_quebrou_init = false;
-static bool debugHit = false;
 //------------------------------------------------------------
 static Player player = { 0 };
 static struct Bullet *bullet = NULL;
@@ -153,7 +163,9 @@ double colisaoTime = -10;
 
 
 ExtraLife extralife = {0};
+Chest chest = {0};
 const float tempo_de_respawn = 10.0f;
+const float tempo_de_respawn_chest = 30.0f;
 const int extralifeTamanho  = 55;
 
 Barreira barreira[MAX_BARREIRA];
@@ -191,6 +203,7 @@ int main(void)
     #define VIDA_TAMANHO (int)(40  * sMin)
     #define TAMANHO_MADEIRA (int)(30  * sMin)
     #define BULLET_SIZE (int)(60*sMin)
+    #define CHEST_SIZE (int)(50*sMin)
     
 
 
@@ -265,6 +278,11 @@ void InitGame(void){
     img = LoadImage("assets/healer.png");
     ImageResize(&img , VIDA_TAMANHO , VIDA_TAMANHO);
     imglifeextra = LoadTextureFromImage(img);
+    UnloadImage(img);
+
+    img = LoadImage("assets/chest.png");
+    ImageResize(&img , CHEST_SIZE , CHEST_SIZE);
+    chest_img = LoadTextureFromImage(img);
     UnloadImage(img);
 
     Image imgshield = LoadImage("assets/wood_shield.png");
@@ -487,27 +505,12 @@ void DrawGame(void){
                 }
 
                 DrawTexture(tex, (int)player.position.x, (int)player.position.y, WHITE);
-                if (debugHit) {
-    Rectangle fullBox = { player.position.x, player.position.y, player.width, player.height };
-    DrawRectangleLinesEx(fullBox, 2, RED);   // bounding box completa
-
-}
             }
 
             // DESENHA AS BALAS
             Bullet *b = bullet;
                 while (b !=NULL){
                 DrawTextureV(b->texture, b->position, RAYWHITE);
-                if (debugHit) {
-    float w = b->texture.width  * ESCALA_HITBOX;
-    float h = b->texture.height * ESCALA_HITBOX;
-    float offX = (b->texture.width  - w)*0.5f;
-    float offY = (b->texture.height - h)*0.5f;
-
-    Rectangle r = { b->position.x + offX, b->position.y + offY, w, h };
-    DrawRectangleLinesEx(r, 1, GOLD);
-}
-
                 b = b->next;
                 }
                 
@@ -515,20 +518,16 @@ void DrawGame(void){
             for (int i = 0; i < MAX_BARREIRA; i++) {
                 if (barreira[i].ativa) {
                     DrawTextureV(imgmadeira, barreira[i].position, WHITE);
-                    if (debugHit) {
-    // usamos círculo nas colisões (CheckCollisionCircleRec)
-    Vector2 c = {
-        barreira[i].position.x + BARREIRA_TAMANHO*0.5f,
-        barreira[i].position.y + BARREIRA_TAMANHO*0.5f
-    };
-    DrawCircleLines((int)c.x, (int)c.y, BARREIRA_TAMANHO*0.5f, LIME);
-}
 
                 }
             }
 
             if (extralife.ativo){
                 DrawTextureV(imglifeextra, extralife.position, WHITE);
+            }
+
+            if (chest.ativo){
+                DrawTextureV(chest_img, chest.position, WHITE);
             }
 
         }
@@ -618,9 +617,12 @@ void reiniciar(void){
     player.position.x = screenWidth/2 - 20; 
     player.position.y = screenHeight/2 - 20;
     extralife.ativo = false;
+    chest.status_efeito = false;
+    chest.ativo = false;
     gameover_music_init = false;
     gameover_sound_init = false;
     extralife.tempo_dps_respawn = 0.0f;
+    chest.tempo_dps_respawn = 0.0f;
     for (int i = 0; i <MAX_BARREIRA;i++){
         barreira[i].ativa = false;
     }
@@ -738,9 +740,6 @@ void UpdateGame(void){
     tempo_jogado += deltaTime;
     cronometro_last_spawn += deltaTime; 
     
-    if (IsKeyPressed(KEY_H)){   // tecla para alternar
-    debugHit = !debugHit;
-    }
 
     
     //  movimentacao do jogador inclusive na diagonal
@@ -971,6 +970,58 @@ void UpdateGame(void){
 
         if (extralife.tempo_ativo >= 6.0f){
             extralife.ativo = false;
+        }
+
+    }
+
+    chest.tempo_dps_respawn += deltaTime;
+
+    if (!chest.ativo && chest.tempo_dps_respawn >= tempo_de_respawn_chest){
+        chest.tempo_dps_respawn += deltaTime;
+        chest.position.x = GetRandomValue(0 , screenWidth - CHEST_SIZE);
+        chest.position.y = GetRandomValue(0, screenHeight - CHEST_SIZE);
+        chest.ativo = true;
+        chest.tempo_dps_respawn = 0.0f;
+        chest.tempo_ativo = 0.0f;
+    }
+
+    if (chest.ativo){
+        chest.tempo_ativo += deltaTime;
+
+        Rectangle chest_rec = { chest.position.x , chest.position.y , CHEST_SIZE , CHEST_SIZE};
+        if (CheckCollisionRecs(playerRec, chest_rec)){
+            chest.ativo = false;
+            chest.item = GetRandomValue(0, 1);
+            if (chest.item == 0){
+                player.speed_original = player.speed;
+            } else if (chest.item == 1){
+                bullet_speed_original = bullet_speed;
+            }
+            
+            chest.status_efeito = true;
+            chest.tempo_decorrido_efeito = 0.0f;
+        }
+
+        if (chest.tempo_ativo >= 15.0f){
+            chest.ativo = false;
+        }
+
+    }
+
+    if (chest.status_efeito){
+        chest.tempo_decorrido_efeito += deltaTime;
+        if (chest.item == 0){
+             player.speed = 30;
+        }else if (chest.item == 1){
+            bullet_speed = 20.0f;
+        }
+        if (chest.tempo_decorrido_efeito >= 10.0f){
+            if (chest.item == 0){
+                player.speed = player.speed_original;
+            }else if (chest.item == 1){
+                bullet_speed = bullet_speed_original;
+            }
+            chest.status_efeito = false;
         }
 
     }
