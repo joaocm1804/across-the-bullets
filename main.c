@@ -6,12 +6,25 @@
 #include <ctype.h>
 #include <string.h>
 
+static const float BASE_W = 1280.0f;
+static const float BASE_H =  720.0f;
+
+/* ---------- fatores de escala calculados em runtime -------------- */
+static float sX, sY, sMin;  
+
 #define MAX_CHAR_NOME 3
 #define ESCALA_HITBOX 0.65f
 #define MAX_BARREIRA 5
-#define BARREIRA_TAMANHO 95
-#define VIDA_TAMANHO 55
-#define TAMANHO_MADEIRA 30
+#define BARREIRA_TAMANHO
+#define VIDA_TAMANHO
+#define TAMANHO_MADEIRA
+#define BULLET_SIZE
+
+// ----- Fatores de escala calculados em runtime -----------------
+static float sX;   // escala em X  (largura)
+static float sY;   // escala em Y  (altura)
+static float sMin; // a menor das duas (mantém proporções)
+
 
 
 
@@ -76,8 +89,8 @@ typedef struct Barreira {
 
 // VARIAVEIS GLOBAIS ------------------------------------------
 // Tela -------------------------------------------------------
-static const int screenWidth = 1280;
-static const int screenHeight = 720;
+static int screenWidth;
+static int screenHeight;
 int frameCount = 0; // PISCAR
 // ------------------------------------------------------------
 
@@ -116,7 +129,6 @@ static float qtd_diminuir_por_s = 0.21f; //rampa de dificulda (quanto maior, mai
 //---Balas-----------------------------------------------------
 static float bullet_speed = 380.0f;
 static float bullet_speed_increase = 5.5f; //incremento de velocidade
-static float bullet_size = 40;
 // ------------------------------------------------------------
 
 //---Booleanos-------------------------------------------------
@@ -130,6 +142,7 @@ static bool gameover_sound_init = false;
 static bool vida_sound_init = false;
 static bool wall_construiu_init = false;
 static bool wall_quebrou_init = false;
+static bool debugHit = false;
 //------------------------------------------------------------
 static Player player = { 0 };
 static struct Bullet *bullet = NULL;
@@ -165,8 +178,22 @@ void carregarRanking(User **ranking);
 
 int main(void)
 {
-   
-    InitWindow(screenWidth, screenHeight, "Across the Bullets");    // Inicializa a janela tema
+    SetConfigFlags(FLAG_FULLSCREEN_MODE);
+    InitWindow(GetMonitorWidth(0), GetMonitorHeight(0), "Across the Bullets");    // Inicializa a janela tema
+    screenWidth = GetScreenWidth();
+    screenHeight = GetScreenHeight();
+
+    sX   = (float)screenWidth  / BASE_W;
+    sY   = (float)screenHeight / BASE_H;
+    sMin = (sX < sY) ? sX : sY;   // evita que algo fique fora da tela
+
+    #define BARREIRA_TAMANHO (int)(95  * sMin)
+    #define VIDA_TAMANHO (int)(40  * sMin)
+    #define TAMANHO_MADEIRA (int)(30  * sMin)
+    #define BULLET_SIZE (int)(60*sMin)
+    
+
+
     InitAudioDevice();                                              // Inicializa o sistema de audios
     InitGame();                                                     // Inicializa os elementos do jogo
     SetTargetFPS(60);                                               // Definição de uma taxa mínima de FPS.
@@ -205,22 +232,22 @@ void InitGame(void){
     Image img;
 
     img = LoadImage("assets/bullet_norte.png");
-    ImageResize(&img, 60, 60);             
+    ImageResize(&img, BULLET_SIZE, BULLET_SIZE);             
     bulletTexNorte = LoadTextureFromImage(img);
     UnloadImage(img);                                         
 
     img = LoadImage("assets/bullet_sul.png");
-    ImageResize(&img, 60, 60);
+    ImageResize(&img, BULLET_SIZE, BULLET_SIZE);
     bulletTexSul = LoadTextureFromImage(img);
     UnloadImage(img);
 
     img = LoadImage("assets/bullet_leste.png");
-    ImageResize(&img, 60, 60);                              
+    ImageResize(&img, BULLET_SIZE, BULLET_SIZE);                              
     bulletTexLeste = LoadTextureFromImage(img);
     UnloadImage(img);
 
     img = LoadImage("assets/bullet_oeste.png");
-    ImageResize(&img, 60, 60);
+    ImageResize(&img, BULLET_SIZE, BULLET_SIZE);
     bulletTexOeste = LoadTextureFromImage(img);
     UnloadImage(img);
     //--------------------------------------------------------------------------------------------------
@@ -269,11 +296,11 @@ void InitGame(void){
 
     // PLAYER ------------------------------------------------------------------------------------------
     // Variaveis do Player -----------------------------------------------------------------------------
-    player.width = 60;
-    player.height = 60; 
+    player.width = 60 * sMin;
+    player.height = 60 *sMin; 
     player.position = (Vector2){(screenWidth/2) - player.width/2, (screenHeight/2) - player.height/2};
     player.vida = 3;
-    player.speed = 7;
+    player.speed = 9;
     player.backpack.madeira = 5;
     // -------------------------------------------------------------------------------------------------
     for (int i =0; i < 6; i++){
@@ -322,26 +349,26 @@ void InitGame(void){
         if (direction == 0){//norte
             b->direction.x = 0;
             b->direction.y = 1;
-            b->position.y= -bullet_size; //nasce com o tamanho da bala para fora da tela
-            b->position.x = GetRandomValue(0, screenWidth - bullet_size);
+            b->position.y= -BULLET_SIZE; //nasce com o tamanho da bala para fora da tela
+            b->position.x = GetRandomValue(0, screenWidth - BULLET_SIZE);
             b->texture = bulletTexNorte;
         } else if (direction == 1){//sul
             b->direction.x = 0;
             b->direction.y = -1;
             b->position.y= screenHeight;
-            b->position.x = GetRandomValue(0, screenWidth - bullet_size);
+            b->position.x = GetRandomValue(0, screenWidth - BULLET_SIZE);
             b->texture = bulletTexSul;
         } else if (direction == 2){//leste
             b->direction.x = -1;
             b->direction.y = 0;
             b->position.x= screenWidth;
-            b->position.y = GetRandomValue(0, screenHeight - bullet_size);
+            b->position.y = GetRandomValue(0, screenHeight - BULLET_SIZE);
             b->texture = bulletTexLeste;
         } else if (direction == 3){//oeste
             b->direction.x = 1;
             b->direction.y = 0;
-            b->position.x= -bullet_size;
-            b->position.y = GetRandomValue(0, screenHeight - bullet_size);
+            b->position.x= -BULLET_SIZE;
+            b->position.y = GetRandomValue(0, screenHeight - BULLET_SIZE);
             b->texture = bulletTexOeste;
         }
         b->next = bullet;
@@ -460,12 +487,27 @@ void DrawGame(void){
                 }
 
                 DrawTexture(tex, (int)player.position.x, (int)player.position.y, WHITE);
+                if (debugHit) {
+    Rectangle fullBox = { player.position.x, player.position.y, player.width, player.height };
+    DrawRectangleLinesEx(fullBox, 2, RED);   // bounding box completa
+
+}
             }
 
             // DESENHA AS BALAS
             Bullet *b = bullet;
                 while (b !=NULL){
                 DrawTextureV(b->texture, b->position, RAYWHITE);
+                if (debugHit) {
+    float w = b->texture.width  * ESCALA_HITBOX;
+    float h = b->texture.height * ESCALA_HITBOX;
+    float offX = (b->texture.width  - w)*0.5f;
+    float offY = (b->texture.height - h)*0.5f;
+
+    Rectangle r = { b->position.x + offX, b->position.y + offY, w, h };
+    DrawRectangleLinesEx(r, 1, GOLD);
+}
+
                 b = b->next;
                 }
                 
@@ -473,6 +515,15 @@ void DrawGame(void){
             for (int i = 0; i < MAX_BARREIRA; i++) {
                 if (barreira[i].ativa) {
                     DrawTextureV(imgmadeira, barreira[i].position, WHITE);
+                    if (debugHit) {
+    // usamos círculo nas colisões (CheckCollisionCircleRec)
+    Vector2 c = {
+        barreira[i].position.x + BARREIRA_TAMANHO*0.5f,
+        barreira[i].position.y + BARREIRA_TAMANHO*0.5f
+    };
+    DrawCircleLines((int)c.x, (int)c.y, BARREIRA_TAMANHO*0.5f, LIME);
+}
+
                 }
             }
 
@@ -687,6 +738,10 @@ void UpdateGame(void){
     tempo_jogado += deltaTime;
     cronometro_last_spawn += deltaTime; 
     
+    if (IsKeyPressed(KEY_H)){   // tecla para alternar
+    debugHit = !debugHit;
+    }
+
     
     //  movimentacao do jogador inclusive na diagonal
     if (IsKeyDown(KEY_D) || IsKeyDown(KEY_RIGHT)){
@@ -825,7 +880,7 @@ void UpdateGame(void){
 
         // Condição para respawn de balas
         bool saiu = false;
-        if (bullet_atual->position.x < -bullet_size || bullet_atual->position.x >= screenWidth || bullet_atual->position.y < -bullet_size || bullet_atual->position.y >= screenHeight){
+        if (bullet_atual->position.x < -BULLET_SIZE || bullet_atual->position.x >= screenWidth || bullet_atual->position.y < -BULLET_SIZE || bullet_atual->position.y >= screenHeight){
             saiu = true;
         }
 
@@ -861,26 +916,26 @@ void UpdateGame(void){
             if (direcao == 0){//norte
                 new->direction.x = 0;
                 new->direction.y = 1;
-                new->position.y= -bullet_size; //nasce com o tamanho da bala para fora da tela
-                new->position.x = GetRandomValue(0, screenWidth - bullet_size);
+                new->position.y= -BULLET_SIZE; //nasce com o tamanho da bala para fora da tela
+                new->position.x = GetRandomValue(0, screenWidth - BULLET_SIZE);
                 new->texture = bulletTexNorte;
             } else if (direcao == 1){//sul
                 new->direction.x = 0;
                 new->direction.y = -1;
                 new->position.y= screenHeight;
-                new->position.x = GetRandomValue(0, screenWidth - bullet_size);
+                new->position.x = GetRandomValue(0, screenWidth - BULLET_SIZE);
                 new->texture = bulletTexSul;
             } else if (direcao == 2){//leste
                 new->direction.x = -1;
                 new->direction.y = 0;
                 new->position.x= screenWidth;
-                new->position.y = GetRandomValue(0, screenHeight - bullet_size);
+                new->position.y = GetRandomValue(0, screenHeight - BULLET_SIZE);
                 new->texture = bulletTexLeste;
             } else if (direcao == 3){//oeste
                 new->direction.x = 1;
                 new->direction.y = 0;
-                new->position.x= -bullet_size;
-                new->position.y = GetRandomValue(0, screenHeight - bullet_size);
+                new->position.x= -BULLET_SIZE;
+                new->position.y = GetRandomValue(0, screenHeight - BULLET_SIZE);
                 new->texture = bulletTexOeste;
             }
             new->next = bullet;
