@@ -445,7 +445,7 @@ void DrawGame(void){
         ClearBackground(RAYWHITE);
         DrawTexture(tela_instrucoes, 0, 0, WHITE);
         const char *mensagem2 = "Pressione [ENTER] para voltar ao menu";
-        int fontSize2 = 25;
+        int fontSize2 = 30;
         int LarguraTexto2 = MeasureText(mensagem2, fontSize2);
         frameCount++;
         if ((frameCount / 30) % 2 == 0){
@@ -462,7 +462,7 @@ void DrawGame(void){
 
 
         // DEFINICÃO DE CARACTERES DO TEXTO INICIAL
-        int tamanho_tex = 30;
+        int tamanho_tex = 35;
         int textWidth1 = MeasureText(linha1, tamanho_tex);
         int textWidth2 = MeasureText(linha2, tamanho_tex);
 
@@ -479,8 +479,8 @@ void DrawGame(void){
             DrawText(linha1, x1, posicaoYbase, tamanho_tex, BLACK);
             DrawText(linha2, x2, posicaoYbase + espacamento, tamanho_tex, BLACK);
         }
-        const int margem = 20;
-        const int tamanho_tex_2 = 20;
+        const int margem = 25;
+        const int tamanho_tex_2 = 25;
         const char *cmd1 = "[L] - Leaderboard";
         const char *cmd2 = "[G] - Como Jogar"; 
 
@@ -592,25 +592,26 @@ void DrawGame(void){
         // DESENHA O TEMPO DE JOGO
         int minutos = (int)tempo_jogado / 60;
         int segundos = (int)tempo_jogado % 60;
-        DrawText(TextFormat("%02d:%02d", minutos, segundos), screenWidth - screenWidth/10 , 10, 30 , BLACK);
+        int larguraTexto = MeasureText("02:02", 45);
 
-        // DrawText(TextFormat("%0.02f", (float)tempo_jogado/60), screenWidth - screenWidth/18 , 10, 30 , BLACK);
+        DrawText(TextFormat("%02d:%02d", minutos, segundos), screenWidth - larguraTexto - 20, 20, 45 , BLACK);
+
         
         if (gameOver) {
             const char* go = "GAME OVER";
-            int size = 80;
+            int size = 100;
             int width_go = MeasureText(go, size);
             int x = (screenWidth - width_go)/2;
             int y = screenHeight/2 - size/2 - 40;
             DrawText(go, x, y, size, RED);
 
             const char* dsn = "Digite seu nome:";
-            int width_dsn = MeasureText(dsn, 25);
+            int width_dsn = MeasureText(dsn, 30);
 
 
             if (!pontuacao_salva) {
-                DrawText(dsn, x, y + 90, 25, BLACK);
-                DrawText(nome_player, x + width_dsn + 15, y + 90, 30, BLACK);
+                DrawText(dsn, x, y + 105, 30, BLACK);
+                DrawText(nome_player, x + width_dsn + 15, y + 105, 35, BLACK); 
             }
 
             const char *mensagem_coloque = "Digite 3 caracteres para o nome e";
@@ -620,7 +621,7 @@ void DrawGame(void){
             int larguraTexto2 = MeasureText(mensagem_coloque, fontSize);
 
             DrawText(mensagem_coloque, screenWidth / 2 - larguraTexto2 / 2, screenHeight - 130, fontSize, BLACK);
-            DrawText(mensagem_pressione, screenWidth / 2 - larguraTexto / 2, screenHeight - 100, fontSize, BLACK);
+            DrawText(mensagem_pressione, screenWidth / 2 - larguraTexto / 2, screenHeight - 95, fontSize, BLACK);
 
         }
     }
@@ -1207,52 +1208,79 @@ void salvarRanking(User **head){
     fclose(ranking);
 }
 
-void printarLeaderboard(void){
+void printarLeaderboard(void) {
     static int frameCount = 0;
-    frameCount++; 
+    frameCount++;
 
     FILE *leaderboard = fopen("ranking.txt", "r");
-    if (leaderboard == NULL){
-        DrawText("Ranking vazio :(", screenWidth/2 - 100, screenHeight/2, 25, RED);
+    if (leaderboard == NULL) {
+        DrawText("Ranking vazio :(", screenWidth / 2 - 100, screenHeight / 2, 25, RED);
         return;
     }
 
-    int espacamento = 30;
+    int espacamento = 50;
 
-    DrawText("RANKING", screenWidth / 2 - 100, 100, 40, DARKGRAY);
+    // Centralizar "RANKING"
+    const char *titulo = "RANKING";
+    int larguraTitulo = MeasureText(titulo, 60);
+    DrawText(titulo, (screenWidth - larguraTitulo) / 2, 100, 60, DARKGRAY);
 
-    DrawText("POS", screenWidth / 2 - 200, 160, 20, GRAY);
-    DrawText("NOME", screenWidth / 2 - 100, 160, 20, GRAY);
-    DrawText("TEMPO", screenWidth / 2 + 50, 160, 20, GRAY);
+    // Medir larguras dos títulos
+    int larguraPos = MeasureText("POS", 35);
+    int larguraNome = MeasureText("NOME", 35);
+    int larguraTempo = MeasureText("TEMPO", 35);
 
-    char nome[4];
+    // Espaço total para as 3 colunas
+    int totalLarguraColunas = larguraPos + larguraNome + larguraTempo + 200;
+    int startX = (screenWidth - totalLarguraColunas) / 2;
+
+    int colPosX[3];
+    colPosX[0] = startX;
+    colPosX[1] = colPosX[0] + larguraPos + 100;
+    colPosX[2] = colPosX[1] + larguraNome + 100;
+
+    DrawText("POS", colPosX[0], 190, 35, GRAY);
+    DrawText("NOME", colPosX[1], 190, 35, GRAY);
+    DrawText("TEMPO", colPosX[2], 190, 35, GRAY);
+
+    char nome[5];
     int min, seg;
     int pos = 1;
 
-    while (fscanf(leaderboard, "%3s %d:%d", nome, &min, &seg) == 3 && pos <= 10){
+    while (pos <= 10 && fscanf(leaderboard, "%4s %d:%d", nome, &min, &seg) == 3) {
         char tempo[10];
         sprintf(tempo, "%02d:%02d", min, seg);
 
-        int y = 160 + espacamento * pos;
+        int y = 190 + espacamento * pos;
 
-        DrawText(TextFormat("%2d.", pos), screenWidth / 2 - 200, y, 20, BLACK);
-        DrawText(nome, screenWidth / 2 - 100, y, 20, BLACK);
-        DrawText(tempo, screenWidth / 2 + 50, y, 20, BLACK);
+        // Para centralizar valores, medir largura deles:
+        char posStr[5];
+        sprintf(posStr, "%2d.", pos);
+        int larguraPosStr = MeasureText(posStr, 30);
+        int larguraNomeStr = MeasureText(nome, 30);
+        int larguraTempoStr = MeasureText(tempo, 30);
+
+        // Centralizar em relação à coluna (posição da coluna + metade da largura do título - metade do texto)
+        int posXPos = colPosX[0] + larguraPos / 2 - larguraPosStr / 2;
+        int posXNome = colPosX[1] + larguraNome / 2 - larguraNomeStr / 2;
+        int posXTempo = colPosX[2] + larguraTempo / 2 - larguraTempoStr / 2;
+
+        DrawText(posStr, posXPos, y, 30, BLACK);
+        DrawText(nome, posXNome, y, 30, BLACK);
+        DrawText(tempo, posXTempo, y, 30, BLACK);
 
         pos++;
-    }
 
     fclose(leaderboard);
-        
+
     const char *mensagem = "Pressione [ENTER] para voltar ao menu";
-    int fontSize = 20;
+    int fontSize = 30;
     int larguraTexto = MeasureText(mensagem, fontSize);
 
     if ((frameCount / 30) % 2 == 0) {
         DrawText(mensagem, screenWidth / 2 - larguraTexto / 2, screenHeight - 100, fontSize, DARKGREEN);
     }
-}
-
+}}
 
 void limparRanking(User **head) {
     User *atual = *head;
