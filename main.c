@@ -1013,7 +1013,7 @@ void UpdateGame(void){
     if (chest.status_efeito){
         chest.tempo_decorrido_efeito += deltaTime;
         if (chest.item == 0){
-             player.speed = 30;
+             player.speed = 20;
         }else if (chest.item == 1){
             bullet_speed = 20.0f;
         }
