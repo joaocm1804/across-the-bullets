@@ -510,6 +510,10 @@ void DrawGame(void){
         }
 
        if (!gameOver) {
+               if (lama.ativo){
+                DrawTextureV(lama_img,lama.position,WHITE);
+            }
+            
             double tempoAtual = GetTime();
 
             bool deveDesenhar = true;
@@ -559,9 +563,7 @@ void DrawGame(void){
                 DrawTextureV(chest_img, chest.position, WHITE);
             }
 
-            if (lama.ativo){
-                DrawTextureV(lama_img,lama.position,WHITE);
-            }
+     
 
         }
 
