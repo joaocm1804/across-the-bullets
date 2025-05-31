@@ -134,6 +134,8 @@ static Sound sound_gameover;
 static Sound vida_sound;
 static Sound wall_construiu;
 static Sound wall_quebrou;
+static Sound slowmo;
+static Sound fast_efx;
 // ------------------------------------------------------------
 
 // Tempo ------------------------------------------------------
@@ -162,6 +164,8 @@ static bool gameover_sound_init = false;
 static bool vida_sound_init = false;
 static bool wall_construiu_init = false;
 static bool wall_quebrou_init = false;
+static bool slowmo_sound = false;
+static bool fast_sound= false;
 //------------------------------------------------------------
 static Player player = { 0 };
 static struct Bullet *bullet = NULL;
@@ -330,6 +334,8 @@ void InitGame(void){
     vida_sound = LoadSound("assets/audio/effects/powerUp.wav");
     wall_construiu = LoadSound("assets/audio/effects/wall_construiu.wav");
     wall_quebrou = LoadSound("assets/audio/effects/wall_quebrou.wav");
+    slowmo = LoadSound("assets/audio/effects/slowmo.wav");
+    fast_efx = LoadSound("assets/audio/effects/quick.wav");
     SetSoundVolume(sound_gameover, 0.4f);
     SetSoundVolume(sound_atingiu, 0.5f);
     SetSoundVolume(vida_sound, 0.4f);
@@ -662,6 +668,8 @@ void reiniciar(void){
     gameover_sound_init = false;
     extralife.tempo_dps_respawn = 0.0f;
     chest.tempo_dps_respawn = 0.0f;
+    chest.tempo_decorrido_efeito = 0.0f;
+    bullet_speed = 400.0f;
     for (int i = 0; i <MAX_BARREIRA;i++){
         barreira[i].ativa = false;
     }
@@ -1032,8 +1040,19 @@ void UpdateGame(void){
             chest.ativo = false; 
             chest.item = GetRandomValue(0, 1);
 
-            if (chest.item == 1) { 
+            if (chest.item == 1) {
+                slowmo_sound = true;
+                if (slowmo_sound){
+                    PlaySound(slowmo);
+                    slowmo_sound = false;
+                } 
                 bullet_speed_original = bullet_speed; 
+            } else if (chest.item == 0){
+                fast_sound = true;
+                if (fast_sound){
+                    PlaySound(fast_efx);
+                    fast_sound = false;
+                } 
             }
             
             chest.status_efeito = true; 
