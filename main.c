@@ -341,6 +341,7 @@ void InitGame(void){
     SetSoundVolume(vida_sound, 0.4f);
     SetSoundVolume(wall_construiu, 0.4f);
     SetSoundVolume(wall_quebrou, 0.4f);
+    SetSoundVolume(slowmo, 0.4f);
 
 
     // -------------------------------------------------------------------------------------------------
