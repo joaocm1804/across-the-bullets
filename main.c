@@ -1263,7 +1263,7 @@ void printarLeaderboard(void) {
     DrawText("NOME", colPosX[1], 190, 35, GRAY);
     DrawText("TEMPO", colPosX[2], 190, 35, GRAY);
 
-    char nome[5];
+    char nome[4];
     int min, seg;
     int pos = 1;
 
@@ -1290,6 +1290,7 @@ void printarLeaderboard(void) {
         DrawText(tempo, posXTempo, y, 30, BLACK);
 
         pos++;
+    }
 
     fclose(leaderboard);
 
@@ -1300,7 +1301,7 @@ void printarLeaderboard(void) {
     if ((frameCount / 30) % 2 == 0) {
         DrawText(mensagem, screenWidth / 2 - larguraTexto / 2, screenHeight - 100, fontSize, DARKGREEN);
     }
-}}
+}
 
 void limparRanking(User **head) {
     User *atual = *head;
