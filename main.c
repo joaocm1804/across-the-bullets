@@ -166,6 +166,8 @@ static bool wall_construiu_init = false;
 static bool wall_quebrou_init = false;
 static bool slowmo_sound = false;
 static bool fast_sound= false;
+
+static bool ai_active = false;
 //------------------------------------------------------------
 static Player player = { 0 };
 static struct Bullet *bullet = NULL;
@@ -211,6 +213,7 @@ void carregarRanking(User **ranking);
 
 //-------------------------------------------------------------
 
+static void updateAi();
 
 int main(void)
 {
@@ -695,6 +698,7 @@ void UpdateGame(void){
             instrucoes = true;
             leaderboard = false;
         }
+        
         if (IsKeyPressed(KEY_ENTER)){
             if (leaderboard ==true){
                 leaderboard = false;
@@ -806,6 +810,9 @@ void UpdateGame(void){
     if (IsKeyDown(KEY_S) || IsKeyDown(KEY_DOWN)){
         player.position.y += player.speed;
         player.direction = 3;
+    }
+    if (IsKeyPressed(KEY_M)){
+            ai_active = !ai_active;
     }
 
     // limitando a movimentação a tela
@@ -1120,8 +1127,8 @@ void UpdateGame(void){
     }
 
 
-
-
+    if (ai_active)
+        updateAi();
 }
 
 
@@ -1334,3 +1341,70 @@ void carregarRanking(User **head){
     fclose(ranking);
 }
 //--------------------------------------------------------------------------------------------------------
+#define ELETRIC_FORCE 6
+#define ELASTIC_FORCE 7.5e-7
+#define LAMA_FORCE 2e-7
+#define POCAO_FORCE 2e-4
+
+float clamp(float a, float min, float max){
+    return fmax(fmin(a, max), min);
+}
+
+static void updateAi(){
+    Vector2 sum = {0, 0};
+    sum.x = -(player.position.x - screenWidth / 2) * ELASTIC_FORCE;
+    sum.y = -(player.position.y - screenHeight / 2) * ELASTIC_FORCE;
+
+    if (lama.ativo){
+        float deltaX = player.position.x - lama.position.x;
+        float deltaY = player.position.y - lama.position.y;
+        float dist = sqrtf(deltaX * deltaX + deltaY * deltaY);
+        if (dist < 400){
+            sum.x += (player.position.x - lama.position.x) * LAMA_FORCE;
+            sum.y += (player.position.y - lama.position.y) * LAMA_FORCE;
+        }  
+    }
+
+    if (extralife.ativo){
+        float deltaX = player.position.x - extralife.position.x;
+        float deltaY = player.position.y - extralife.position.y;
+        float dist = sqrtf(deltaX * deltaX + deltaY * deltaY);
+        if (dist < 600){
+            sum.x -= POCAO_FORCE * deltaX / dist;
+            sum.y -= POCAO_FORCE * deltaY / dist;
+        }
+    }
+
+    Bullet *cur = bullet;
+    while(cur){
+        float deltaX = cur->position.x - player.position.x;
+        float deltaY = cur->position.y - player.position.y;
+        float dist2 = deltaX * deltaX + deltaY * deltaY;
+        if (dist2 < 700 * 700) {
+            float invDist = 1 / sqrtf(dist2);
+            float force = ELETRIC_FORCE / dist2;
+            sum.x -= deltaX * invDist * force;
+            sum.y -= deltaY * invDist * force;
+        }
+        
+        cur = cur->next;
+    }
+
+    sum.x *= 100000;
+    sum.y *= 100000;
+
+    player.position.x += clamp(sum.x, -player.speed, player.speed);
+    player.position.y += clamp(sum.y, -player.speed, player.speed);
+
+    float angle = atan2f(sum.y, sum.x);
+    if (angle > PI / 4 && angle < PI * 3 / 4){
+        player.direction = 3;
+    } else if (angle > PI * 3 / 4 && angle < PI * 5 / 4){
+        player.direction = 1;
+    }
+    else if (angle > PI * 5 / 4 && angle < PI * 7 / 4){
+        player.direction = 2;
+    } else {
+        player.direction = 0;
+    }
+}
